@@ -1,0 +1,5 @@
+[gerrit]
+host=gerrit.swg-devops.com
+port=29418
+project=alchemy/ids-extensions/utilities
+defaultbranch=master
