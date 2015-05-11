@@ -142,6 +142,8 @@ setup_met_logging() {
     # restart it to pick up the config changes
     service mt-logstash-forwarder restart
 
+    # flag logging enabled for other extensions to use
+    export LOGMET_LOGGING_ENABLED=1
     return 0
 }
 
