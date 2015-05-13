@@ -209,16 +209,18 @@ log_and_echo() {
 print_errors() {
     if [ -n "${ERROR_ARRAY}" ]; then
         if [ ${#ERROR_ARRAY[@]} -eq 1 ]; then
-            echo -e "${label_color}There was ${#ERROR_ARRAY[@]} error during execution:${no_color}"
+            echo -e "${label_color}There was ${#ERROR_ARRAY[@]} error recorded during execution:${no_color}"
         else
-            echo -e "${label_color}There were ${#ERROR_ARRAY[@]} errors during execution:${no_color}"
+            echo -e "${label_color}There were ${#ERROR_ARRAY[@]} errors recorded during execution:${no_color}"
         fi
         for error in "${ERROR_ARRAY[@]}"; do
             echo "${error}"
         done
     
     else
-        echo "There were no errors logged"
+        echo -e "${label_color}There were no errors recorded during execution${no_color}"
+        echo "This usually happens if errors occured early in the initiation"
+        echo "Please check the log above for error messages"
     fi
     
 }
