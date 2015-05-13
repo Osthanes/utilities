@@ -147,33 +147,62 @@ setup_met_logging() {
     return 0
 }
 
-LOG="LOG_LEVEL"
+INFO="INFO_LEVEL"
+LABEL="LABEL_LEVEL"
 WARN="WARN_LEVEL"
 ERROR="ERROR_LEVEL"
 
+INFO_LEVEL=4
+WARN_LEVEL=2
+ERROR_LEVEL=1
+OFF_LEVEL=0
+
 ERROR_ARRAY=()
 
+
+
 log_and_echo() {
-    local LEVEL="$1"
-    if [ "$LOG" == "$LEVEL" ]; then
+    if [ -z "$LOGGER_LEVEL" ]; then
+        #setting as local so other code won't think it has been set externally
+        local LOGGER_LEVEL=$WARN_LEVEL
+    fi
+    local MSG_TYPE="$1"
+    if [ "$INFO" == "$MSG_TYPE" ]; then
         shift
         local pre=""
         local post=""
-    elif [ "$WARN" == "$LEVEL" ]; then
+        local MSG_LEVEL=$INFO_LEVEL
+    elif [ "$LABEL" == "$MSG_TYPE"]; then
         shift
         local pre="${label_color}"
         local post="${no_color}"
-    elif [ "ERROR" == "$LEVEL" ]; then
+        local MSG_LEVEL=$INFO_LEVEL
+    elif [ "$WARN" == "$MSG_TYPE" ]; then
+        shift
+        local pre="${label_color}"
+        local post="${no_color}"
+        local MSG_LEVEL=$WARN_LEVEL
+    elif [ "$ERROR" == "$MSG_TYPE" ]; then
         shift
         local pre="${red}"
         local post="${no_color}"
+        local MSG_LEVEL=$ERROR_LEVEL
+    else
+        #NO MSG type specified; fall through to INFO level
+        #Do not shift
+        local pre=""
+        local post=""
+        local MSG_LEVEL=$INFO_LEVEL
     fi
     local L_MSG=`echo -e "$*"`
     local D_MSG=`echo -e "${pre}${L_MSG}${post}"`
     echo "$D_MSG"
-    logger --tag "pipeline" "$L_MSG"
-    if [ "ERROR" == "$LEVEL" ]; then
+    if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
+        logger --tag "pipeline" "$L_MSG"
+    fi
+    if [ "$ERROR" == "$LEVEL" ]; then
         ERROR_ARRAY+=("$D_MSG")
+    fi
 }
 
 print_errors() {
@@ -198,8 +227,17 @@ print_errors() {
 export -f setup_met_logging
 export -f log_and_echo
 export -f print_errors
-# export logging levels for log_and_echo
+# export message types for log_and_echo
 # ERRORs will be collected
-export LOG
+export INFO
+export LABEL
 export WARN
 export ERROR
+
+#export logging levels for log_and_echo
+# messages will be logged if LOGGER_LEVEL is set to or above the LEVEL
+# default LOGGER_LEVEL is WARN_LEVEL
+export INFO_LEVEL
+export WARN_LEVEL
+export ERROR_LEVEL
+export OFF_LEVEL
