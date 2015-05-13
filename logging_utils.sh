@@ -197,20 +197,21 @@ log_and_echo() {
     local L_MSG=`echo -e "$*"`
     local D_MSG=`echo -e "${pre}${L_MSG}${post}"`
     echo "$D_MSG"
+    if [ "$ERROR" == "$MSG_TYPE" ]; then
+        #store the error for later
+        ERROR_ARRAY+=("$D_MSG")
+    fi
     if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
         logger --tag "pipeline" "$L_MSG"
-    fi
-    if [ "$ERROR" == "$LEVEL" ]; then
-        ERROR_ARRAY+=("$D_MSG")
     fi
 }
 
 print_errors() {
     if [ -n "${ERROR_ARRAY}" ]; then
         if [ ${#ERROR_ARRAY[@]} -eq 1 ]; then
-            echo -e "${label_color}There was ${#ERROR_ARRAY[@]} error logged:${no_color}"
+            echo -e "${label_color}There was ${#ERROR_ARRAY[@]} error during execution:${no_color}"
         else
-            echo -e "${label_color}There were ${#ERROR_ARRAY[@]} errors logged:${no_color}"
+            echo -e "${label_color}There were ${#ERROR_ARRAY[@]} errors during execution:${no_color}"
         fi
         for error in "${ERROR_ARRAY[@]}"; do
             echo "${error}"
