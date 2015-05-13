@@ -147,14 +147,59 @@ setup_met_logging() {
     return 0
 }
 
+LOG="LOG_LEVEL"
+WARN="WARN_LEVEL"
+ERROR="ERROR_LEVEL"
+
+ERROR_ARRAY=()
+
 log_and_echo() {
-    echo "$*"
-    logger --tag "pipeline" "$*"
+    local LEVEL="$1"
+    if [ "$LOG" == "$LEVEL" ]; then
+        shift
+        local pre=""
+        local post=""
+    elif [ "$WARN" == "$LEVEL" ]; then
+        shift
+        local pre="${label_color}"
+        local post="${no_color}"
+    elif [ "ERROR" == "$LEVEL" ]; then
+        shift
+        local pre="${red}"
+        local post="${no_color}"
+    fi
+    local L_MSG=`echo -e "$*"`
+    local D_MSG=`echo -e "${pre}${L_MSG}${post}"`
+    echo "$D_MSG"
+    logger --tag "pipeline" "$L_MSG"
+    if [ "ERROR" == "$LEVEL" ]; then
+        ERROR_ARRAY+=("$D_MSG")
 }
 
+print_errors() {
+    if [ -n "${ERROR_ARRAY}" ]; then
+        if [ ${#ERROR_ARRAY[@]} -eq 1 ]; then
+            echo -e "${label_color}There was ${#ERROR_ARRAY[@]} error logged:${no_color}"
+        else
+            echo -e "${label_color}There were ${#ERROR_ARRAY[@]} errors logged:${no_color}"
+        fi
+        for error in "${ERROR_ARRAY[@]}"; do
+            echo "${error}"
+        done
+    
+    else
+        echo "There were no errors logged"
+    fi
+    
+}
 
 # begin main execution sequence
 
 export -f setup_met_logging
 export -f log_and_echo
-
+export -f print_errors
+# export logging levels for log_and_echo
+# ERRORs will be collected
+export LOG
+export WARN
+export ERROR
