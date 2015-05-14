@@ -157,9 +157,7 @@ WARN_LEVEL=2
 ERROR_LEVEL=1
 OFF_LEVEL=0
 
-ERROR_ARRAY=()
-
-
+ERROR_LOG_FILE="${EXT_DIR}/errors.log"
 
 log_and_echo() {
     if [ -z "$LOGGER_LEVEL" ]; then
@@ -199,7 +197,7 @@ log_and_echo() {
     echo "$D_MSG"
     if [ "$ERROR" == "$MSG_TYPE" ]; then
         #store the error for later
-        ERROR_ARRAY+=("$D_MSG")
+        echo "$D_MSG" >> "$ERROR_LOG_FILE"
     fi
     if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
         logger --tag "pipeline" "$L_MSG"
@@ -209,21 +207,16 @@ log_and_echo() {
 }
 
 print_errors() {
-    if [ -n "${ERROR_ARRAY}" ]; then
-        if [ ${#ERROR_ARRAY[@]} -eq 1 ]; then
-            echo -e "${label_color}There was ${#ERROR_ARRAY[@]} error recorded during execution:${no_color}"
+    if [ -e "${ERROR_LOG_FILE}" ]; then
+        local ERROR_COUNT=`wc "${ERROR_LOG_FILE}" | awk '{print $1}'` 
+        if [ ${ERROR_COUNT} -eq 1 ]; then
+            echo -e "${label_color}There was ${ERROR_COUNT} error recorded during execution:${no_color}"
         else
-            echo -e "${label_color}There were ${#ERROR_ARRAY[@]} errors recorded during execution:${no_color}"
+            echo -e "${label_color}There were ${ERROR_COUNT} errors recorded during execution:${no_color}"
         fi
-        for error in "${ERROR_ARRAY[@]}"; do
-            echo "${error}"
-        done
-    
-    else
-        echo -e "${label_color}There were no errors recorded during execution${no_color}"
-        echo "This usually happens if errors occured early in the initiation"
-        echo "Please check the log above for error messages"
+        cat "${ERROR_LOG_FILE}"
     fi
+    #No output if no errors were recorded
     
 }
 
