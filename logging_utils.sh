@@ -203,6 +203,8 @@ log_and_echo() {
     fi
     if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
         logger --tag "pipeline" "$L_MSG"
+        #DEBUG:
+        echo -e "${red}LOGGING($MSG_LEVEL/$LOGGER_LEVEL):${no_color} pipeline $L_MSG"
     fi
 }
 
