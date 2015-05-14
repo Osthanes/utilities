@@ -157,7 +157,12 @@ WARN_LEVEL=2
 ERROR_LEVEL=1
 OFF_LEVEL=0
 
-ERROR_LOG_FILE="${EXT_DIR}/errors.log"
+
+if [ -z "$ERROR_LOG_FILE" ]; then
+    ERROR_LOG_FILE="${EXT_DIR}/errors.log"
+    export ERROR_LOG_FILE
+fi
+
 
 log_and_echo() {
     if [ -z "$LOGGER_LEVEL" ]; then
@@ -201,10 +206,9 @@ log_and_echo() {
     fi
     if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
         logger --tag "pipeline" "$L_MSG"
-        #DEBUG:
-        echo -e "${red}LOGGING($MSG_LEVEL/$LOGGER_LEVEL):${no_color} pipeline $L_MSG"
     fi
 }
+
 
 print_errors() {
     if [ -e "${ERROR_LOG_FILE}" ]; then
@@ -239,5 +243,3 @@ export INFO_LEVEL
 export WARN_LEVEL
 export ERROR_LEVEL
 export OFF_LEVEL
-
-export ERROR_LOG_FILE
