@@ -172,7 +172,7 @@ log_and_echo() {
         local pre=""
         local post=""
         local MSG_LEVEL=$INFO_LEVEL
-    elif [ "$LABEL" == "$MSG_TYPE"]; then
+    elif [ "$LABEL" == "$MSG_TYPE" ]; then
         shift
         local pre="${label_color}"
         local post="${no_color}"
