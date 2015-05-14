@@ -239,3 +239,5 @@ export INFO_LEVEL
 export WARN_LEVEL
 export ERROR_LEVEL
 export OFF_LEVEL
+
+export ERROR_LOG_FILE
