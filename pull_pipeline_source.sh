@@ -15,13 +15,13 @@
 #   See the License for the specific language governing permissions and
 #********************************************************************************
 echo "cloning extension repositories"
-if [ -d update_service ]; then cd update_service; git pull; else git clone  --depth 1 https://github.com/Osthanes/update_service.git;fi 
-if [ -d appscan_dynamic_analyzer ]; then cd appscan_dynamic_analyzer; git pull; else git clone  --depth 1  https://github.com/Osthanes/appscan_dynamic_analyzer.git; fi
-if [ -d notifications ]; then cd notifications; git pull; else git clone  --depth 1 https://github.com/Osthanes/notifications.git ; fi
-if [ -d globalization ]; then cd globalization; git pull; else git clone  --depth 1 https://github.com/Osthanes/globalization.git ; fi
-if [ -d appscan_static_analyzer ]; then cd appscan_static_analyzer; git pull; else git clone  --depth 1 https://github.com/Osthanes/appscan_static_analyzer.git ; fi
-if [ -d docker_builder ]; then cd docker_builder; git pull; else git clone  --depth 1 https://github.com/Osthanes/docker_builder.git ; fi 
-if [ -d container_deployer ]; then cd container_deployer; git pull; else git clone  --depth 1 https://github.com/Osthanes/container_deployer ; fi
+if [ -d update_service ]; then cd update_service; git pull; cd ..; else git clone  --depth 1 https://github.com/Osthanes/update_service.git;fi 
+if [ -d appscan_dynamic_analyzer ]; then cd appscan_dynamic_analyzer; echo "updating Language_en.properties"; git checkout -f Language_en.properties; cd ..; else git clone  --depth 1  https://github.com/Osthanes/appscan_dynamic_analyzer.git; fi
+if [ -d notifications ]; then cd notifications; echo "updating Language_en.properties"; git checkout -f Language_en.properties; cd ..; else git clone  --depth 1 https://github.com/Osthanes/notifications.git ; fi
+if [ -d globalization ]; then cd globalization; echo "updating Language_en.properties"; git checkout -f Language_en.properties; cd ..; else git clone  --depth 1 https://github.com/Osthanes/globalization.git ; fi
+if [ -d appscan_static_analyzer ]; then cd appscan_static_analyzer; echo "updating Language_en.properties"; git checkout -f Language_en.properties; cd ..; else git clone  --depth 1 https://github.com/Osthanes/appscan_static_analyzer.git ; fi
+if [ -d docker_builder ]; then cd docker_builder; echo "updating Language_en.properties"; git checkout -f Language_en.properties; cd ..; else git clone  --depth 1 https://github.com/Osthanes/docker_builder.git ; fi 
+if [ -d container_deployer ]; then cd container_deployer; echo "updating Language_en.properties"; git checkout -f Language_en.properties; cd ..; else git clone  --depth 1 https://github.com/Osthanes/container_deployer ; fi
 
 echo "packaging up en source files to: osthanes_en_source_files.tar"
 find . -name "Language_en.properties"  | tar -cf osthanes_en_source_files.tar -T -
