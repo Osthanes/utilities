@@ -147,13 +147,13 @@ setup_met_logging() {
     return 0
 }
 
-DEBUG="DEBUG_LEVEL"
+DEBUGGING="DEBUGGING_LEVEL"
 INFO="INFO_LEVEL"
 LABEL="LABEL_LEVEL"
 WARN="WARN_LEVEL"
 ERROR="ERROR_LEVEL"
 
-DEBUG_LEVEL=6
+DEBUGGING_LEVEL=6
 INFO_LEVEL=4
 WARN_LEVEL=2
 ERROR_LEVEL=1
@@ -168,8 +168,13 @@ fi
 
 log_and_echo() {
     if [ -z "$LOGGER_LEVEL" ]; then
-        #setting as local so other code won't think it has been set externally
-        local LOGGER_LEVEL=$INFO_LEVEL
+        if [[ $DEBUG = 1 ]]; then
+            #setting as local so other code won't think it has been set externally
+            local LOGGER_LEVEL=$DEBUGGING_LEVEL
+        else
+            #setting as local so other code won't think it has been set externally
+            local LOGGER_LEVEL=$INFO_LEVEL
+        fi
     fi
     local MSG_TYPE="$1"
     if [ "$INFO" == "$MSG_TYPE" ]; then
@@ -177,11 +182,11 @@ log_and_echo() {
         local pre=""
         local post=""
         local MSG_LEVEL=$INFO_LEVEL
-    elif [ "$DEBUG" == "$MSG_TYPE" ]; then
+    elif [ "$DEBUGGING" == "$MSG_TYPE" ]; then
         shift
         local pre=""
         local post=""
-        local MSG_LEVEL=$DEBUG_LEVEL
+        local MSG_LEVEL=$DEBUGGING_LEVEL
     elif [ "$LABEL" == "$MSG_TYPE" ]; then
         shift
         local pre="${label_color}"
@@ -239,7 +244,7 @@ export -f log_and_echo
 export -f print_errors
 # export message types for log_and_echo
 # ERRORs will be collected
-export DEBUG
+export DEBUGGING
 export INFO
 export LABEL
 export WARN
@@ -248,8 +253,8 @@ export ERROR
 #export logging levels for log_and_echo
 # messages will be echoed if LOGGER_LEVEL is set to or above the LEVEL
 # messages are always logged
-# default LOGGER_LEVEL is INFO_LEVEL
-export DEBUG_LEVEL
+# default LOGGER_LEVEL is INFO_LEVEL, unless DEBUG=1, then DEBUGGING_LEVEL
+export DEBUGGING_LEVEL
 export INFO_LEVEL
 export WARN_LEVEL
 export ERROR_LEVEL
