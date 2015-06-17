@@ -147,11 +147,13 @@ setup_met_logging() {
     return 0
 }
 
+DEBUG="DEBUG_LEVEL"
 INFO="INFO_LEVEL"
 LABEL="LABEL_LEVEL"
 WARN="WARN_LEVEL"
 ERROR="ERROR_LEVEL"
 
+DEBUG_LEVEL=6
 INFO_LEVEL=4
 WARN_LEVEL=2
 ERROR_LEVEL=1
@@ -167,7 +169,7 @@ fi
 log_and_echo() {
     if [ -z "$LOGGER_LEVEL" ]; then
         #setting as local so other code won't think it has been set externally
-        local LOGGER_LEVEL=$WARN_LEVEL
+        local LOGGER_LEVEL=$INFO_LEVEL
     fi
     local MSG_TYPE="$1"
     if [ "$INFO" == "$MSG_TYPE" ]; then
@@ -175,6 +177,11 @@ log_and_echo() {
         local pre=""
         local post=""
         local MSG_LEVEL=$INFO_LEVEL
+    elif [ "$DEBUG" == "$MSG_TYPE" ]; then
+        shift
+        local pre=""
+        local post=""
+        local MSG_LEVEL=$DEBUG_LEVEL
     elif [ "$LABEL" == "$MSG_TYPE" ]; then
         shift
         local pre="${label_color}"
@@ -199,14 +206,15 @@ log_and_echo() {
     fi
     local L_MSG=`echo -e "$*"`
     local D_MSG=`echo -e "${pre}${L_MSG}${post}"`
-    echo "$D_MSG"
+    if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
+        echo "$D_MSG"
+    fi
     if [ "$ERROR" == "$MSG_TYPE" ]; then
         #store the error for later
         echo "$D_MSG" >> "$ERROR_LOG_FILE"
     fi
-    if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
-        logger --tag "pipeline" "$L_MSG"
-    fi
+    # always log
+    logger --tag "pipeline" "$L_MSG"
 }
 
 
@@ -231,14 +239,17 @@ export -f log_and_echo
 export -f print_errors
 # export message types for log_and_echo
 # ERRORs will be collected
+export DEBUG
 export INFO
 export LABEL
 export WARN
 export ERROR
 
 #export logging levels for log_and_echo
-# messages will be logged if LOGGER_LEVEL is set to or above the LEVEL
-# default LOGGER_LEVEL is WARN_LEVEL
+# messages will be echoed if LOGGER_LEVEL is set to or above the LEVEL
+# messages are always logged
+# default LOGGER_LEVEL is INFO_LEVEL
+export DEBUG_LEVEL
 export INFO_LEVEL
 export WARN_LEVEL
 export ERROR_LEVEL
