@@ -62,7 +62,7 @@ Notes:
     in an environment variable called 'SLACK_WEBHOOK_PATH' like this:
       SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
     You can use or create a new Slack Webhook URL using the following steps:
-      1. Go to Slack Integration page of your project (https://blue-alchemy.slack.com/services).
+      1. Go to Slack Integration page of your project (https://yourproject.slack.com/services).
       2. Find the Incoming WebHooks and Click on 'Configured'.
       3. You can add new Webhook URL or select existing one.
   SLACK_COLOR: Specify the color of the border along the left side of the message. 
@@ -113,7 +113,7 @@ msgid_4()
         echo -e "in an environment variable called 'SLACK_WEBHOOK_PATH' like this:"
         echo -e "export SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
         echo -e "You can use or create a new Slack Webhook URL using the following steps:"
-        echo -e "   1. Go to Slack Integration page of your project (https://blue-alchemy.slack.com/services) "
+        echo -e "   1. Go to Slack Integration page of your project (https://yourproject.slack.com/services) "
         echo -e "   2. Find the Incoming WebHooks and Click on 'Configured'"
         echo -e "   3. You can add new Webhook URL or select existing one."
     fi 
