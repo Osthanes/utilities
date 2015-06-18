@@ -200,7 +200,7 @@ fi
 
 if [ "$sendMsg" == false ]; then
     if [ -n "$SLACK_WEBHOOK_PATH" ]; then
-        echo -e "Ignoring to send Notification message because the NOTIFY_FILTER = '${NOTIFY_FILTER}' and NOTIFY_LEVEL = '${NOTIFY_LEVEL}'"
+        echo -e "skipped sending Notification message because the NOTIFY_FILTER = '${NOTIFY_FILTER}' and NOTIFY_LEVEL = '${NOTIFY_LEVEL}'"
     fi
 else
     # Check if the message token has been set
