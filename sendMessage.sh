@@ -161,7 +161,7 @@ if [ -z "$SLACK_COLOR" ]; then
             BAD|bad)
                 SLACK_COLOR=$SLACK_COLOR_DANGER;;
             INFO|info)
-                SLACK_COLOR=$SLACK_COLOR_WARNING;;
+                SLACK_COLOR="#c3cab9";;
             *) 
                 SLACK_COLOR="";;
         esac
