@@ -219,7 +219,7 @@ log_and_echo() {
         echo "$D_MSG" >> "$ERROR_LOG_FILE"
     fi
     # always log
-    logger --tag "pipeline" "$L_MSG"
+    logger -t "pipeline" "$L_MSG"
 }
 
 
