@@ -38,7 +38,7 @@ Notes:
                         SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
 
                 You can use or create a new Slack Webhook URL using the following steps:
-                        1. Go to Slack Integration page of your project (https://blue-alchemy.slack.com/services).
+                        1. Go to Slack Integration page of your project (https://yourproject.slack.com/services).
                         2. Find the Incoming WebHooks and Click on 'Configured'.
                         3. You can add new Webhook URL or select existing one.
 
