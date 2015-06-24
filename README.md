@@ -32,8 +32,11 @@ Options:
         -d      (optional) Debug information 
 
 Notes:
+
 The follwing environment varaiables should be specify before you call this script
+
         Slack Notification:
+
                 SLACK_WEBHOOK_PATH: Specify the Slack Webhook URL
                         In order to send Slack notification you must specify the Slack Webhook URL
                         in an environment variable called 'SLACK_WEBHOOK_PATH' like this:
@@ -51,6 +54,7 @@ The follwing environment varaiables should be specify before you call this scrip
                         If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
 
         HipChat Notification:
+
                 HIP_CHAT_TOKEN: Specify the HipChat token
                         In order to send HipChat notification you must specify the HipChat token
                         in an environment variable called 'HIP_CHAT_TOKEN' like this:
@@ -76,6 +80,7 @@ The follwing environment varaiables should be specify before you call this scrip
                 It is an optional environment variable.
                 The value can either be one of 'good', 'info', and 'bad'.
                 The table below show with 'X" when the notification message will be send based on setting notification level and NOTIFY_FILTER.
+
                 |---------------|--------------------------------------|
                 |               |             NOTIFY_FILTER            |
                 |---------------|---------|---------|--------|---------|
