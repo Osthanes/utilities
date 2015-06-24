@@ -99,6 +99,7 @@ The follwing environment varaiables should be specify before you call this scrip
         You can use or create a new HipChat token using the following steps:
           1. Go to your HipChat account page of your project (https://yourproject.hipchat.com/account/api).
           2. Create a new token or use existing one."
+      HIP_CHAT_ROOM_NAME: Specify the HipChat room name.
       HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
         It is an optional environment variable.
         The value can either be one of 'yellow', 'red', 'green', 'purple', 'gray', or 'random'.
@@ -341,7 +342,7 @@ INVALID_ARGUMENTS=$*
  
 debugme echo -e "Script Input:  NOTIFY_LEVEL = '${NOTIFY_LEVEL}', NOTIFY_MSG = '${NOTIFY_MSG}'"
 debugme echo -e "Slack environment variable:  SLACK_COLOR = '${SLACK_COLOR}' SLACK_WEBHOOK_PATH = '${SLACK_WEBHOOK_PATH}'"
-debugme echo -e "HipChat environment variable:  HIP_CHAT_COLOR = '${HIP_CHAT_COLOR}', HIP_CHAT_TOKEN = '${HIP_CHAT_TOKEN}'"
+debugme echo -e "HipChat environment variable:  HIP_CHAT_COLOR = '${HIP_CHAT_COLOR}', HIP_CHAT_ROOM_NAME = '${HIP_CHAT_ROOM_NAME}, HIP_CHAT_TOKEN = '${HIP_CHAT_TOKEN}'"
 debugme echo -e "Common environment variable: MESSAGE_COLOR = '${MESSAGE_COLOR}', NOTIFY_FILTER = '${NOTIFY_FILTER}'"
  
 # Check NOTIFY_FILTER and NOTIFY_LEVEL to set sendMsg boolean  

@@ -65,6 +65,8 @@ The follwing environment varaiables should be specify before you call this scrip
                                 1. Go to your HipChat account page of your project (https://yourproject.hipchat.com/account/api).
                                 2. Create a new token or use existing one."
 
+                HIP_CHAT_ROOM_NAME: Specify the HipChat room name.
+
                 HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
                         It is an optional environment variable.
                         The value can either be one of 'yellow', 'red', 'green', 'purple', 'gray', or 'random'.
