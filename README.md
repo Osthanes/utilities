@@ -9,7 +9,9 @@ Purpose:  Send a notification message.
 
 Description:
 
-A simple bash script to send a notification message. It is currently supported for Slack when the user specify the Slack Webhook URL token. 
+A simple bash script to send a notification message. It is currently supported for Slack and HipChat. 
+It needs to specify Slack Webhook URL token for stack notification. 
+It needs to specify HipChat room name and HipChat token for HipChat notification. 
 
 Synopsis:
 
@@ -30,27 +32,50 @@ Options:
         -d      (optional) Debug information 
 
 Notes:
+The follwing environment varaiables should be specify before you call this script
+        Slack Notification:
+                SLACK_WEBHOOK_PATH: Specify the Slack Webhook URL
+                        In order to send Slack notification you must specify the Slack Webhook URL
+                        in an environment variable called 'SLACK_WEBHOOK_PATH' like this:
 
-        SLACK_WEBHOOK_PATH: Specify the Slack Webhook URL
-                In order to send Slack notification you must specify the Slack Webhook URL
-                in an environment variable called 'SLACK_WEBHOOK_PATH' like this:
+                                SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
 
-                        SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+                        You can use or create a new Slack Webhook URL using the following steps:
+                                1. Go to Slack Integration page of your project (https://yourproject.slack.com/services).
+                                2. Find the Incoming WebHooks and Click on 'Configured'.
+                                3. You can add new Webhook URL or select existing one.
 
-                You can use or create a new Slack Webhook URL using the following steps:
-                        1. Go to Slack Integration page of your project (https://yourproject.slack.com/services).
-                        2. Find the Incoming WebHooks and Click on 'Configured'.
-                        3. You can add new Webhook URL or select existing one.
+                SLACK_COLOR: Specify the color of the border along the left side of the message. 
+                        It is an optional environment variable.
+                        The value can either be one of 'good', 'warning', 'danger', or any hex color code (eg. #439FE0).
+                        If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
 
-        SLACK_COLOR: Specify the color of the border along the left side of the message. 
-                It is an optional environment variable.
-                The value can either be one of 'good', 'warning', 'danger', or any hex color code (eg. #439FE0).
+        HipChat Notification:
+                HIP_CHAT_TOKEN: Specify the HipChat token
+                        In order to send HipChat notification you must specify the HipChat token
+                        in an environment variable called 'HIP_CHAT_TOKEN' like this:
+
+                                HIP_CHAT_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXX
+
+                        You can use or create a new HipChat token using the following steps:
+                                1. Go to your HipChat account page of your project (https://yourproject.hipchat.com/account/api).
+                                2. Create a new token or use existing one."
+
+                HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
+                        It is an optional environment variable.
+                        The value can either be one of 'yellow', 'red', 'green', 'purple', 'gray', or 'random'.
+                        If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
+
+        MESSAGE_COLOR: Specify the color of the border along the left side of the message and background color.
+                It is an optional environment variable and it apply to both Slack and HipChat color.  
+                The value can either be one of 'good', 'danger', or 'info'.
+                If user specify SLACK_COLOR, HIP_CHAT_COLOR and MESSAGE_COLOR, then SLACK_COLOR and HIP_CHAT_COLOR will be used for the notification color.
                 If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
 
         NOTIFY_FILTER: Specify the message filter level.
                 It is an optional environment variable.
                 The value can either be one of 'good', 'info', and 'bad'.
-                The table below show with 'X" wjen the notification message will be send based on setting notification level and NOTIFY_FILTER.
+                The table below show with 'X" when the notification message will be send based on setting notification level and NOTIFY_FILTER.
                 |---------------|--------------------------------------|
                 |               |             NOTIFY_FILTER            |
                 |---------------|---------|---------|--------|---------|
