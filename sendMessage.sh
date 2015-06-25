@@ -466,6 +466,11 @@ else
                 HIP_CHAT_COLOR=$(echo $HIP_CHAT_COLOR | tr '[:upper:]' '[:lower:]')
             fi
 
+            if [ -z ${HIP_CHAT_ROOM_NAME} ]; then 
+                echo "HIP_CHAT_ROOM_NAME must be set when using HIP_CHAT_TOKEN" 
+                exit 1
+            fi 
+
             # Send message to the HipChat
             sendHipChatNotify "${NOTIFY_MSG}" "${HIP_CHAT_ROOM_NAME}" "${HIP_CHAT_TOKEN}" "${HIP_CHAT_COLOR}"
         fi
