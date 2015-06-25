@@ -76,7 +76,7 @@ Options:
   -d    (optional) Debug information  
 
 Notes:
-The follwing environment varaiables should be specify before you call this script
+The following environment varaiables should be specify before you call this script
   Slack Notification:
       SLACK_WEBHOOK_PATH: Specify the Slack Webhook URL
         In order to send Slack notification you must specify the Slack Webhook URL
@@ -94,12 +94,12 @@ The follwing environment varaiables should be specify before you call this scrip
   HipChat Notification:
       HIP_CHAT_TOKEN: Specify the HipChat token
         In order to send HipChat notification you must specify the HipChat token
-        in an environment variable called 'HIP_CHAT_TOKEN' like this:
+        in an environment variable called 'HIP_CHAT_TOKEN':
           HIP_CHAT_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXX
         You can use or create a new HipChat token using the following steps:
           1. Go to your HipChat account page of your project (https://yourproject.hipchat.com/account/api).
           2. Create a new token or use existing one."
-      HIP_CHAT_ROOM_NAME: Specify the HipChat room name.
+      HIP_CHAT_ROOM_NAME: Specify the name of the HipChat room.
       HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
         It is an optional environment variable.
         The value can either be one of 'yellow', 'red', 'green', 'purple', 'gray', or 'random'.
@@ -178,9 +178,9 @@ die()
 }
 
 #############################################################################
-# sentSlackNotify Function
+# sendSlackNotify Function
 #############################################################################
-sentSlackNotify()
+sendSlackNotify()
 {
     local MSG=$1
     local WEBHOOK_PATH=$2
@@ -231,9 +231,9 @@ sentSlackNotify()
 }
 
 #############################################################################
-# sentHipChatNotify Functions
+# sendHipChatNotify Functions
 #############################################################################
-sentHipChatNotify()
+sendHipChatNotify()
 {
     local MSG=$1
     local ROOM_NAME=$2
@@ -341,9 +341,9 @@ INVALID_ARGUMENTS=$*
 [ -z "${NOTIFY_LEVEL}" ] && [ -z "${NOTIFY_MSG}" ] && usage && die ${RC_NOTIFY_LEVEL_USAGE}
  
 debugme echo -e "Script Input:  NOTIFY_LEVEL = '${NOTIFY_LEVEL}', NOTIFY_MSG = '${NOTIFY_MSG}'"
-debugme echo -e "Slack environment variable:  SLACK_COLOR = '${SLACK_COLOR}' SLACK_WEBHOOK_PATH = '${SLACK_WEBHOOK_PATH}'"
-debugme echo -e "HipChat environment variable:  HIP_CHAT_COLOR = '${HIP_CHAT_COLOR}', HIP_CHAT_ROOM_NAME = '${HIP_CHAT_ROOM_NAME}, HIP_CHAT_TOKEN = '${HIP_CHAT_TOKEN}'"
-debugme echo -e "Common environment variable: MESSAGE_COLOR = '${MESSAGE_COLOR}', NOTIFY_FILTER = '${NOTIFY_FILTER}'"
+debugme echo -e "Slack environment variables:  SLACK_COLOR = '${SLACK_COLOR}' SLACK_WEBHOOK_PATH = '${SLACK_WEBHOOK_PATH}'"
+debugme echo -e "HipChat environment variables:  HIP_CHAT_COLOR = '${HIP_CHAT_COLOR}', HIP_CHAT_ROOM_NAME = '${HIP_CHAT_ROOM_NAME}, HIP_CHAT_TOKEN = '${HIP_CHAT_TOKEN}'"
+debugme echo -e "Common environment variables: MESSAGE_COLOR = '${MESSAGE_COLOR}', NOTIFY_FILTER = '${NOTIFY_FILTER}'"
  
 # Check NOTIFY_FILTER and NOTIFY_LEVEL to set sendMsg boolean  
 sendMsg=true
@@ -427,7 +427,7 @@ else
             fi
 
             # Send message to the Slack
-            sentSlackNotify "${NOTIFY_MSG}" "${SLACK_WEBHOOK_PATH}" "${SLACK_COLOR}"
+            sendSlackNotify "${NOTIFY_MSG}" "${SLACK_WEBHOOK_PATH}" "${SLACK_COLOR}"
         fi
 
         # HipChat Notification
@@ -467,7 +467,7 @@ else
             fi
 
             # Send message to the HipChat
-            sentHipChatNotify "${NOTIFY_MSG}" "${HIP_CHAT_ROOM_NAME}" "${HIP_CHAT_TOKEN}" "${HIP_CHAT_COLOR}"
+            sendHipChatNotify "${NOTIFY_MSG}" "${HIP_CHAT_ROOM_NAME}" "${HIP_CHAT_TOKEN}" "${HIP_CHAT_COLOR}"
         fi
     fi
 
