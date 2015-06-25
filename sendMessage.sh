@@ -69,7 +69,8 @@ Usage: [-d] [-l notify_level] -m notify_message
        [-h]
 
 Options:
-  -m    (required) Use notification massage for user input
+  -m    (required) Use notification massage for user input.  May container URLs using slack notification format <url|name>.  
+        For example: sendMessage.sh -l good -m 'Got 200 response from <http://www.google.com|google> and <http://www.yahoo.com|yahoo>.  Search is alive and well' 
   -l    (recommended) Use notification level for user input. You can set the notification level using the NOTIFY_LEVEL environment variable.
         Valid values are 'good', 'info', and 'bad'. 
   -h    Display this help message and exit

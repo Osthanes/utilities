@@ -27,6 +27,7 @@ Options:
 
         -h      Display this help message and exit
         -m      (required) Use notification massage for user input
+                For example: sendMessage.sh -l good -m 'Got 200 response from <http://www.google.com|google> and <http://www.yahoo.com|yahoo>.  Search is alive and well' 
         -l      (recommended) Use notification level for user input. You can set the notification level using the NOTIFY_LEVEL environment variable.
                 Valid values are 'good', 'info', and 'bad'. 
         -d      (optional) Debug information 
