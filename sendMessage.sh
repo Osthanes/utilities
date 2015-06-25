@@ -273,6 +273,17 @@ sendHipChatNotify()
         COLOR="${HIP_CHAT_COLOR_GRAY}"
     fi
 
+    # If we are running in an IDS job set a URL for the sender 
+    if [ -n "${IDS_PROJECT_NAME}" ]; then 
+        debugme echo -e "setting sender"
+        MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
+        MY_IDS_USER=${IDS_PROJECT_NAME%% |*}
+        MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}"
+        MSG="${MY_IDS_URL}: ${MSG}"
+    else
+        debugme echo -e "Sender for this notification message is not defined"
+    fi 
+
     # replace the spaces with %20
     ROOM_NAME=`echo "$ROOM_NAME"|sed 's/ /%20/g'`
     local ret_value=0
@@ -385,7 +396,6 @@ else
     else
         # Slack Notification
         if [ -n "$SLACK_WEBHOOK_PATH" ]; then
-            # If we are running in an IDS job set a URL for the sender 
         
             # Check if the SLACK_COLOR set in environment variable, then use SLACK_COLOR for the setting the color.
             # If SLACK_COLOR is not set, then check if the MESSAGE_COLOR set and use MESSAGE_COLOR for the setting the color.
@@ -429,16 +439,6 @@ else
 
         # HipChat Notification
         if [ -n "$HIP_CHAT_TOKEN" ]; then
-            # If we are running in an IDS job set a URL for the sender 
-            if [ -n "${IDS_PROJECT_NAME}" ]; then 
-                debugme echo -e "setting sender"
-                MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
-                MY_IDS_USER=${IDS_PROJECT_NAME%% |*}
-                MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}"
-                NOTIFY_MSG="${MY_IDS_URL}: ${NOTIFY_MSG}"
-            else
-                debugme echo -e "Sender for this notification message is not defined"
-            fi 
 
             # Check if the HIP_CHAT_COLOR set in environment variable, then use HIP_CHAT_COLOR for the setting the color.
             # If HIP_CHAT_COLOR is not set, then check if the MESSAGE_COLOR set and use MESSAGE_COLOR for the setting the color.
