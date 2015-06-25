@@ -199,6 +199,18 @@ sendSlackNotify()
     else 
         URL=$WEBHOOK_PATH
     fi 
+    
+    if [ -n "${IDS_PROJECT_NAME}" ]; then 
+        debugme echo -e "setting sender"
+        MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
+        MY_IDS_USER=${IDS_PROJECT_NAME%% |*}
+        MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}"
+        SENDER="<${MY_IDS_URL}|${MY_IDS_PROJECT}-${MY_IDS_USER}>"
+        MSG="${SENDER}: ${MSG}"
+    else
+        debugme echo -e "Sender for this notification message is not defined"
+    fi 
+
     debugme echo -e "Sending slack notification message:  '${MSG}'"
 
     local PAYLOAD="{\"attachments\":[{""\"text\": \"$MSG\", \"color\": \"$COLOR\"}]}"
@@ -374,17 +386,7 @@ else
         # Slack Notification
         if [ -n "$SLACK_WEBHOOK_PATH" ]; then
             # If we are running in an IDS job set a URL for the sender 
-        if [ -n "${IDS_PROJECT_NAME}" ]; then 
-            debugme echo -e "setting sender"
-            MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
-            MY_IDS_USER=${IDS_PROJECT_NAME%% |*}
-            MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}"
-            SENDER="<${MY_IDS_URL}|${MY_IDS_PROJECT}-${MY_IDS_USER}>"
-            NOTIFY_MSG="${SENDER}: ${NOTIFY_MSG}"
-        else
-            debugme echo -e "Sender for this notification message is not defined"
-        fi 
-
+        
             # Check if the SLACK_COLOR set in environment variable, then use SLACK_COLOR for the setting the color.
             # If SLACK_COLOR is not set, then check if the MESSAGE_COLOR set and use MESSAGE_COLOR for the setting the color.
             # If SLACK_COLOR and MESSAGE_COLOR are not set, then check the NOTIFY_LEVEL and set the SLACK_COLOR based on NOTIFY_LEVEL setting.
@@ -422,7 +424,7 @@ else
             fi
 
             # Send message to the Slack
-            sentSlackNotify "${NOTIFY_MSG}" "${SLACK_WEBHOOK_PATH}" "${SLACK_COLOR}"
+            sendSlackNotify "${NOTIFY_MSG}" "${SLACK_WEBHOOK_PATH}" "${SLACK_COLOR}"
         fi
 
         # HipChat Notification
@@ -479,7 +481,7 @@ else
             fi 
 
             # Send message to the HipChat
-            sentHipChatNotify "${NOTIFY_MSG}" "${HIP_CHAT_ROOM_NAME}" "${HIP_CHAT_TOKEN}" "${HIP_CHAT_COLOR}"
+            sendHipChatNotify "${NOTIFY_MSG}" "${HIP_CHAT_ROOM_NAME}" "${HIP_CHAT_TOKEN}" "${HIP_CHAT_COLOR}"
         fi
     fi
 
