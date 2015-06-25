@@ -10,8 +10,8 @@ Purpose:  Send a notification message.
 Description:
 
 A simple bash script to send a notification message. It is currently supported for Slack and HipChat. 
-It needs to specify Slack Webhook URL token for stack notification. 
-It needs to specify HipChat room name and HipChat token for HipChat notification. 
+It requires Slack Webhook URL token to be specified for stack notification. 
+It requires HipChat room name and HipChat token to be specified for HipChat notification. 
 
 Synopsis:
 
@@ -33,13 +33,13 @@ Options:
 
 Notes:
 
-The follwing environment varaiables should be specify before you call this script
+The following environment varaiables should be specify before you call this script
 
         Slack Notification:
 
                 SLACK_WEBHOOK_PATH: Specify the Slack Webhook URL
                         In order to send Slack notification you must specify the Slack Webhook URL
-                        in an environment variable called 'SLACK_WEBHOOK_PATH' like this:
+                        in an environment variable called 'SLACK_WEBHOOK_PATH':
 
                                 SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -65,7 +65,7 @@ The follwing environment varaiables should be specify before you call this scrip
                                 1. Go to your HipChat account page of your project (https://yourproject.hipchat.com/account/api).
                                 2. Create a new token or use existing one."
 
-                HIP_CHAT_ROOM_NAME: Specify the HipChat room name.
+                HIP_CHAT_ROOM_NAME: Specify the name of the HipChat room.
 
                 HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
                         It is an optional environment variable.

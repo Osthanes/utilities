@@ -261,7 +261,7 @@ sendHipChatNotify()
         COLOR="${HIP_CHAT_COLOR_GRAY}"
     fi
 
-    # replace the soaces with %20
+    # replace the spaces with %20
     ROOM_NAME=`echo "$ROOM_NAME"|sed 's/ /%20/g'`
     local ret_value=0
     local RESPONSE=$(curl --write-out %{http_code} --silent --output /dev/null http://api.hipchat.com/v2/room?auth_token=$AUTH_TOKEN)
@@ -269,20 +269,12 @@ sendHipChatNotify()
     if [ "$RESULT" -eq 0 ]; then
         if [ "$RESPONSE" -eq 200 ]; then
             debugme echo -e "${green}Valid HipChat token.${no_color}"
-            echo $(curl -s http://api.hipchat.com/v2/room/$ROOM_NAME?auth_token=$AUTH_TOKEN&auth_test=true) > notify.log 2> /dev/null
-            local ROOM_ID=$(echo $(cat notify.log)  | awk -F''id'": ' '{print $2;}' | awk -F'"' '{print $1;}' | sed 's/, //'g) 
-            if [ -z "$ROOM_ID" ]; then
-                echo -e "${red}HipChat ROOM_ID can not find.${no_color})"
-                ret_value=1
-            else
-                debugme echo -e "ROOM_ID: ${ROOM_ID}"
-            fi
         else
             echo -e "${red}Validation of HipChat token has been failed with (Response code = ${RESPONSE}).${no_color}"
             ret_value=$RESPONSE
         fi
         debugme echo -e "Sending notification message:  '${MSG}'"
-        local HIP_CHAT_URL="https://api.hipchat.com/v2/room/${ROOM_ID}/notification"
+        local HIP_CHAT_URL="https://api.hipchat.com/v2/room/${ROOM_NAME}/notification"
         debugme echo -e "HIP_CHAT_URL: ${HIP_CHAT_URL}"
         local PAYLOAD="{\"color\": \"$COLOR\", \"message_format\": \"text\", \"message\": \"$MSG\"}"
         debugme echo -e "HipChat Payload: ${PAYLOAD}"
@@ -293,7 +285,7 @@ sendHipChatNotify()
                         -d "$PAYLOAD" $HIP_CHAT_URL)
         RESULT=$?
         if [ "$RESULT" -eq 0 ]; then
-            if [ "$RESPONSE" -eq 204 ]; then
+            if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 204 ]; then
                 echo -e "${green}HipChat notification message has been sent succesfully.${no_color}"
                 ret_value=0
             elif [ "$RESPONSE" -eq 401 ]; then
@@ -301,6 +293,9 @@ sendHipChatNotify()
                 ret_value=$RESPONSE
             elif [ "$RESPONSE" -eq 400 ]; then
                 echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat Payload was not valid'.${no_color})"
+                ret_value=$RESPONSE
+            elif [ "$RESPONSE" -eq 404 ]; then
+                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat room not found'.${no_color})"
                 ret_value=$RESPONSE
             else
                 echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE}).${no_color}"
@@ -376,7 +371,9 @@ else
     if [ -z "$SLACK_WEBHOOK_PATH" ] && [ -z "$HIP_CHAT_TOKEN" ]; then
         die ${RC_NO_TOKEN_DEFINED}
     else
-        # If we are running in an IDS job set a URL for the sender 
+        # Slack Notification
+        if [ -n "$SLACK_WEBHOOK_PATH" ]; then
+            # If we are running in an IDS job set a URL for the sender 
         if [ -n "${IDS_PROJECT_NAME}" ]; then 
             debugme echo -e "setting sender"
             MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
@@ -388,8 +385,6 @@ else
             debugme echo -e "Sender for this notification message is not defined"
         fi 
 
-        # Slack Notification
-        if [ -n "$SLACK_WEBHOOK_PATH" ]; then
             # Check if the SLACK_COLOR set in environment variable, then use SLACK_COLOR for the setting the color.
             # If SLACK_COLOR is not set, then check if the MESSAGE_COLOR set and use MESSAGE_COLOR for the setting the color.
             # If SLACK_COLOR and MESSAGE_COLOR are not set, then check the NOTIFY_LEVEL and set the SLACK_COLOR based on NOTIFY_LEVEL setting.
@@ -427,11 +422,23 @@ else
             fi
 
             # Send message to the Slack
-            sendSlackNotify "${NOTIFY_MSG}" "${SLACK_WEBHOOK_PATH}" "${SLACK_COLOR}"
+            sentSlackNotify "${NOTIFY_MSG}" "${SLACK_WEBHOOK_PATH}" "${SLACK_COLOR}"
         fi
 
         # HipChat Notification
         if [ -n "$HIP_CHAT_TOKEN" ]; then
+            # If we are running in an IDS job set a URL for the sender 
+            if [ -n "${IDS_PROJECT_NAME}" ]; then 
+                debugme echo -e "setting sender"
+                MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
+                MY_IDS_USER=${IDS_PROJECT_NAME%% |*}
+                MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}"
+                SENDER="${MY_IDS_URL} | ${MY_IDS_PROJECT}-${MY_IDS_USER}"
+                NOTIFY_MSG="${SENDER}: ${NOTIFY_MSG}"
+            else
+                debugme echo -e "Sender for this notification message is not defined"
+            fi 
+
             # Check if the HIP_CHAT_COLOR set in environment variable, then use HIP_CHAT_COLOR for the setting the color.
             # If HIP_CHAT_COLOR is not set, then check if the MESSAGE_COLOR set and use MESSAGE_COLOR for the setting the color.
             # If HIP_CHAT_COLOR and MESSAGE_COLOR are not set, then check the NOTIFY_LEVEL and set the HIP_CHAT_COLOR based on NOTIFY_LEVEL setting.
@@ -468,11 +475,11 @@ else
 
             if [ -z ${HIP_CHAT_ROOM_NAME} ]; then 
                 echo "HIP_CHAT_ROOM_NAME must be set when using HIP_CHAT_TOKEN" 
-                exit 1
+                exit $RC_HIP_CHAT_ERROR
             fi 
 
             # Send message to the HipChat
-            sendHipChatNotify "${NOTIFY_MSG}" "${HIP_CHAT_ROOM_NAME}" "${HIP_CHAT_TOKEN}" "${HIP_CHAT_COLOR}"
+            sentHipChatNotify "${NOTIFY_MSG}" "${HIP_CHAT_ROOM_NAME}" "${HIP_CHAT_TOKEN}" "${HIP_CHAT_COLOR}"
         fi
     fi
 
@@ -484,6 +491,6 @@ else
     elif [ $slack_ret_value -eq 0 ] && [ $hip_chat_ret_value -ne 0 ]; then
         exit $RC_HIP_CHAT_ERROR
     elif [ $slack_ret_value -ne 0 ] && [ $hip_chat_ret_value -ne 0 ]; then
-        exit $RC_HIP_CHAT_ERROR
+        exit $RC_SLACK_AND_HIP_CHAT_ERROR
     fi
 fi
