@@ -283,7 +283,7 @@ sendHipChatNotify()
     else
         debugme echo -e "Sender for this notification message is not defined"
     fi 
-
+    
     # replace the spaces with %20
     ROOM_NAME=`echo "$ROOM_NAME"|sed 's/ /%20/g'`
     local ret_value=0
@@ -296,6 +296,18 @@ sendHipChatNotify()
             echo -e "${red}Validation of HipChat token has been failed with (Response code = ${RESPONSE}).${no_color}"
             ret_value=$RESPONSE
         fi
+         # replace message 
+        MSG_FILTER="init"
+        while [ -n "$MSG_FILTER" ]; do 
+            MSG_FILTER=$(echo $MSG | sed -n -e 's/^\(.*\)<\(.*\)|\(.*\)>\(.*\)$/\1\2\4/p')
+            if [ -n "$MSG_FILTER" ]; then 
+                debugme echo "replaced message $MSG with $MSG_FILTER"
+                MSG=$MSG_FILTER
+            else 
+                debugme echo "did not replace $MSG"
+            fi 
+        done 
+
         debugme echo -e "Sending notification message:  '${MSG}'"
         local HIP_CHAT_URL="https://api.hipchat.com/v2/room/${ROOM_NAME}/notification"
         debugme echo -e "HIP_CHAT_URL: ${HIP_CHAT_URL}"
