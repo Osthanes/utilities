@@ -435,8 +435,7 @@ else
                 MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
                 MY_IDS_USER=${IDS_PROJECT_NAME%% |*}
                 MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}"
-                SENDER="${MY_IDS_URL} | ${MY_IDS_PROJECT}-${MY_IDS_USER}"
-                NOTIFY_MSG="${SENDER}: ${NOTIFY_MSG}"
+                NOTIFY_MSG="${MY_IDS_URL}: ${NOTIFY_MSG}"
             else
                 debugme echo -e "Sender for this notification message is not defined"
             fi 
