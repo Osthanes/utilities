@@ -27,8 +27,7 @@ debugme() {
 # Using ice login command  with bluemix api key           #
 ###########################################################
 ice_login_with_api_key() {
-    local ICE_ARGS=$1
-    local API_KEY=$2
+    local API_KEY=$1
     if [ -z "${API_KEY}" ]; then
         echo -e "${red}Expected API_KEY to be passed into ice_login_with_api_key ${no_color}"
         return 1
@@ -55,40 +54,39 @@ ice_login_with_api_key() {
 # Using ice login command  with bluemix user              #
 ###########################################################
 ice_login_with_bluemix_user() {
-    local ICE_ARGS=$1
-    local CCS_API_HOST=$2
-    local CCS_REGISTRY_HOST=$3
-    local BLUEMIX_API_HOST=$4
-    local BLUEMIX_USER=$5
-    local BLUEMIX_PASSWORD=$6
-    local BLUEMIX_ORG=$7
-    local BLUEMIX_SPACE=$8
+    local CCS_API_HOST=$1
+    local CCS_REGISTRY_HOST=$2
+    local BLUEMIX_API_HOST=$3
+    local BLUEMIX_USER=$4
+    local BLUEMIX_PASSWORD=$5
+    local BLUEMIX_ORG=$6
+    local BLUEMIX_SPACE=$7
     if [ -z "${CCS_API_HOST}" ]; then
-        echo -e "${red}Expected CCS_API_HOST to be passed into ice_login_with_api_key ${no_color}"
+        echo -e "${red}Expected CCS_API_HOST to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi
     if [ -z "${CCS_REGISTRY_HOST}" ]; then
-        echo -e "${red}Expected CCS_REGISTRY_HOST to be passed into ice_login_with_api_key ${no_color}"
+        echo -e "${red}Expected CCS_REGISTRY_HOST to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi
     if [ -z "${BLUEMIX_API_HOST}" ]; then
-        echo -e "${red}Expected BLUEMIX_API_HOST to be passed into ice_login_with_api_key ${no_color}"
+        echo -e "${red}Expected BLUEMIX_API_HOST to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi
     if [ -z "${BLUEMIX_USER}" ]; then 
-        echo -e "${red}Expected BLUEMIX_USER to be passed into ice_login_with_api_key ${no_color}"
+        echo -e "${red}Expected BLUEMIX_USER to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi 
     if [ -z "${BLUEMIX_PASSWORD}" ]; then 
-        echo -e "${red}Expected BLUEMIX_PASSWORD to be passed into ice_login_with_api_key ${no_color}"
+        echo -e "${red}Expected BLUEMIX_PASSWORD to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi 
     if [ -z "${BLUEMIX_ORG}" ]; then 
-        echo -e "${red}Expected BLUEMIX_ORG to be passed into ice_login_with_api_key ${no_color}"
+        echo -e "${red}Expected BLUEMIX_ORG to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi 
     if [ -z "${BLUEMIX_SPACE}" ]; then
-        echo -e "${red}Expected BLUEMIX_SPACE to be passed into ice_login_with_api_key ${no_color}"
+        echo -e "${red}Expected BLUEMIX_SPACE to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi 
     local RC=0
@@ -112,7 +110,6 @@ ice_login_with_bluemix_user() {
 # Using ice login command  with bluemix api key           #
 ###########################################################
 ice_login_check() {
-    local ICE_ARGS=$1
     local RC=0
     local retries=0
     mkdir -p ~/.ice
@@ -123,10 +120,10 @@ ice_login_check() {
     debugme cat /home/jenkins/.cf/config.json | cut -c1-2
     debugme cat /home/jenkins/.cf/config.json | cut -c3-
     debugme echo "testing ice login via ice info command"
-    ice_info $ICE_ARGS
+    ice_info
     RC=$?
     if [ ${RC} -eq 0 ]; then
-        ice_images $ICE_ARGS
+        ice_images
         RC=$?
     fi
     return $RC
@@ -137,7 +134,6 @@ ice_login_check() {
 # Using ice info command
 ###########################################################
 ice_info() {
-    local ICE_ARGS=$1
     local RC=0
     local retries=0
     while [ $retries -lt 5 ]; do
@@ -159,7 +155,6 @@ ice_info() {
 # Using ice images command           
 ###########################################################
 ice_images() {
-    local ICE_ARGS=$1
     local RC=0
     local retries=0
     while [ $retries -lt 5 ]; do
@@ -182,9 +177,8 @@ ice_images() {
 #                                                         #
 ###########################################################
 ice_build_image() {
-    local ICE_ARGS=$1
-    local USE_CACHED_LAYERS=$2
-    local FULL_REPOSITORY_NAME=$3
+    local USE_CACHED_LAYERS=$1
+    local FULL_REPOSITORY_NAME=$2
     local WORKSPACE=$4
     if [ -z "${FULL_REPOSITORY_NAME}" ]; then
         echo -e "${red}Expected FULL_REPOSITORY_NAME to be passed into ice_build_image ${no_color}"
