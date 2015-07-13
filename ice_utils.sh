@@ -264,3 +264,14 @@ ice_inspect_images() {
     done
     return $RC
 }
+
+export -f ice_login_with_api_key
+export -f ice_login_with_bluemix_user
+export -f ice_login_check
+export -f ice_info
+export -f ice_images
+export -f ice_build_image
+export -f ice_rmi
+export -f ice_inspect_images
+
+export RET_RESPONCE
