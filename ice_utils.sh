@@ -173,8 +173,8 @@ ice_images() {
 }
 
 ###########################################################
-# build the Container image                               #
-#                                                         #
+# build the Container image             
+# Using ice build command
 ###########################################################
 ice_build_image() {
     local USE_CACHED_LAYERS=$1
@@ -209,6 +209,58 @@ ice_build_image() {
         echo -e "${label_color}Failed to build IBM Container image. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))   
+    done
+    return $RC
+}
+
+###########################################################
+# Rmeove Container image 
+# Using ice rmi command
+###########################################################
+ice_rmi() {
+    local IMAGE_NAME=$1
+    if [ -z "${IMAGE_NAME}" ]; then
+        echo -e "${red}Expected IMAGE_NAME to be passed into ice_rmi ${no_color}"
+        return 1
+    fi
+    local RC=0
+    local retries=0
+    local RESPONSE=""
+    while [ $retries -lt 5 ]; do
+        debugme echo "ice rmi command: ice $ICE_ARGS rmi ${IMAGE_NAME}"
+        RESPONSE=$(ice $ICE_ARGS rmi ${IMAGE_NAME} 2> /dev/null)
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        else
+            echo -e "${label_color}ice rmi did not return successfully. Sleep 20 sec and try again.${no_color}"
+        fi
+        sleep 20
+        retries=$(( $retries + 1 )) 
+    done
+    export RET_RESPONCE=${RESPONSE}
+    return $RC
+}
+
+###########################################################
+# Container inspect images 
+# Using ice inspect images command
+###########################################################
+ice_inspect_images() {
+    local RC=0
+    local retries=0
+    local RESPONSE=""
+    while [ $retries -lt 5 ]; do
+        debugme echo "ice inspect images command: ice $ICE_ARGS inspect images"
+        ice inspect images > inspect.log 2> /dev/null
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        else
+            echo -e "${label_color}ice inspect images did not return successfully. Sleep 20 sec and try again.${no_color}"
+        fi
+        sleep 20
+        retries=$(( $retries + 1 )) 
     done
     return $RC
 }
