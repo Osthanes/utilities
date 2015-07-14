@@ -138,8 +138,9 @@ ice_info() {
     local retries=0
     while [ $retries -lt 5 ]; do
         debugme echo "ice info command: ice ICE_ARGS info"
-        ice $ICE_ARGS info > info.log 2> /dev/null
+        ice $ICE_ARGS info > iceinfo.log 2> /dev/null
         RC=$?
+        debugme cat iceinfo.log 
         if [ ${RC} -eq 0 ]; then
             break
         fi
