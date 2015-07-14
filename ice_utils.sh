@@ -235,7 +235,7 @@ ice_build_image() {
     local CHACHE_OPTION=""
     local PULL_OPTION=""
     local BUILD_COMMAND=""
-    if [ -z "${USE_CACHED_LAYERS}" && "${USE_CACHED_LAYERS}" == "true"]; then
+    if [ -n "$USE_CACHED_LAYERS" ] && [ "$USE_CACHED_LAYERS" == "true" ]; then
         PULL_OPTION="--pull"
     else
         CHACHE_OPTION="--no-cache"
