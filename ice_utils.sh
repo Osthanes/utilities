@@ -153,6 +153,45 @@ ice_info() {
     return $RC
 }
 
+
+
+ice_retry(){
+    local RC=0
+    local retries=0
+    local iceparms="$*"
+    while [ $retries -lt 5 ]; do
+        debugme echo "ice command: ice ${iceparms}"
+        ice $iceparms
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        fi
+        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        sleep 20
+        retries=$(( $retries + 1 ))
+    done
+    return $RC
+}
+
+ice_retry_save_output(){
+    local RC=0
+    local retries=0
+    local iceparms="$*"
+    while [ $retries -lt 5 ]; do
+        debugme echo "ice command: ice ${iceparms}"
+        ice $iceparms > iceretry.log
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        fi
+        debugme cat iceretry.log
+        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        sleep 20
+        retries=$(( $retries + 1 ))
+    done
+    return $RC
+}
+
 ###########################################################
 # Get list of the container images  
 # Using ice images command           
@@ -182,7 +221,7 @@ ice_images() {
 ice_build_image() {
     local USE_CACHED_LAYERS=$1
     local FULL_REPOSITORY_NAME=$2
-    local WORKSPACE=$4
+    local WORKSPACE=$3
     if [ -z "${FULL_REPOSITORY_NAME}" ]; then
         echo -e "${red}Expected FULL_REPOSITORY_NAME to be passed into ice_build_image ${no_color}"
         return 1
