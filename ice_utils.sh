@@ -138,15 +138,17 @@ ice_info() {
     local retries=0
     while [ $retries -lt 5 ]; do
         debugme echo "ice info command: ice ICE_ARGS info"
-        ice $ICE_ARGS info > iceinfo.log 2> /dev/null
+        local ICEINFO=$(ice info 2>/dev/null)
+        echo "$ICEINFO" > iceinfo.log 2> /dev/null
         RC=$?
-        debugme cat iceinfo.log 
+        debugme echo "$ICEINFO"
         if [ ${RC} -eq 0 ]; then
             break
         fi
         echo -e "${label_color}ice info did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
+        rm -f iceinfo.log 
     done
     return $RC
 }

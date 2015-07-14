@@ -279,7 +279,7 @@ sendHipChatNotify()
         debugme echo -e "setting sender"
         MY_IDS_PROJECT=${IDS_PROJECT_NAME##*| } 
         MY_IDS_USER=${IDS_PROJECT_NAME%% |*}
-        MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}/${stageID}/${jobID}/${buildID}"
+        MY_IDS_URL="${IDS_URL}/${MY_IDS_USER}/${MY_IDS_PROJECT}"
         MSG="${MY_IDS_URL}: ${MSG}"
     else
         debugme echo -e "Sender for this notification message is not defined"
