@@ -262,7 +262,7 @@ ice_login_check() {
     ice_retry info 2>/dev/null
     RC=$?
     if [ ${RC} -eq 0 ]; then
-        ice_images
+        ice_retry images 2>/dev/null
         RC=$?
     fi
     return $RC
