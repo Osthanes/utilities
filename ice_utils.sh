@@ -106,30 +106,6 @@ ice_login_with_bluemix_user() {
 }
 
 ###########################################################
-# Login to Container Service                              #
-# Using ice login command  with bluemix api key           #
-###########################################################
-ice_login_check() {
-    local RC=0
-    local retries=0
-    mkdir -p ~/.ice
-    debugme cat "${EXT_DIR}/${ICE_CFG}"
-    cp ${EXT_DIR}/${ICE_CFG} ~/.ice/ice-cfg.ini
-    debugme cat ~/.ice/ice-cfg.ini
-    debugme echo "config.json:"
-    debugme cat /home/jenkins/.cf/config.json | cut -c1-2
-    debugme cat /home/jenkins/.cf/config.json | cut -c3-
-    debugme echo "testing ice login via ice info command"
-    ice_info
-    RC=$?
-    if [ ${RC} -eq 0 ]; then
-        ice_images
-        RC=$?
-    fi
-    return $RC
-}
-
-###########################################################
 # Get Container information
 # Using ice info command
 ###########################################################
@@ -149,45 +125,6 @@ ice_info() {
         sleep 20
         retries=$(( $retries + 1 ))
         rm -f iceinfo.log 
-    done
-    return $RC
-}
-
-
-
-ice_retry(){
-    local RC=0
-    local retries=0
-    local iceparms="$*"
-    while [ $retries -lt 5 ]; do
-        debugme echo "ice command: ice ${iceparms}"
-        ice $iceparms
-        RC=$?
-        if [ ${RC} -eq 0 ]; then
-            break
-        fi
-        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
-        sleep 20
-        retries=$(( $retries + 1 ))
-    done
-    return $RC
-}
-
-ice_retry_save_output(){
-    local RC=0
-    local retries=0
-    local iceparms="$*"
-    while [ $retries -lt 5 ]; do
-        debugme echo "ice command: ice ${iceparms}"
-        ice $iceparms > iceretry.log
-        RC=$?
-        if [ ${RC} -eq 0 ]; then
-            break
-        fi
-        debugme cat iceretry.log
-        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
-        sleep 20
-        retries=$(( $retries + 1 ))
     done
     return $RC
 }
@@ -303,6 +240,76 @@ ice_inspect_images() {
         fi
         sleep 20
         retries=$(( $retries + 1 )) 
+    done
+    return $RC
+}
+
+###########################################################
+# Login to Container Service                              #
+# Using ice login command  with bluemix api key           #
+###########################################################
+ice_login_check() {
+    local RC=0
+    local retries=0
+    mkdir -p ~/.ice
+    debugme cat "${EXT_DIR}/${ICE_CFG}"
+    cp ${EXT_DIR}/${ICE_CFG} ~/.ice/ice-cfg.ini
+    debugme cat ~/.ice/ice-cfg.ini
+    debugme echo "config.json:"
+    debugme cat /home/jenkins/.cf/config.json | cut -c1-2
+    debugme cat /home/jenkins/.cf/config.json | cut -c3-
+    debugme echo "testing ice login via ice info command"
+    ice_retry info 2>/dev/null
+    RC=$?
+    if [ ${RC} -eq 0 ]; then
+        ice_retry images 2>/dev/null
+        RC=$?
+    fi
+    return $RC
+}
+
+
+###########################################################
+# Ice command retry function with not output
+# 
+###########################################################
+ice_retry(){
+    local RC=0
+    local retries=0
+    local iceparms="$*"
+    while [ $retries -lt 5 ]; do
+        debugme echo "ice command: ice ${iceparms}"
+        ice $iceparms
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        fi
+        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        sleep 20
+        retries=$(( $retries + 1 ))
+    done
+    return $RC
+}
+
+###########################################################
+# Ice command retry function with save output
+# in iceretry.log file
+###########################################################
+ice_retry_save_output(){
+    local RC=0
+    local retries=0
+    local iceparms="$*"
+    while [ $retries -lt 5 ]; do
+        debugme echo "ice command: ice ${iceparms}"
+        ice $iceparms > iceretry.log
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        fi
+        debugme cat iceretry.log
+        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        sleep 20
+        retries=$(( $retries + 1 ))
     done
     return $RC
 }
