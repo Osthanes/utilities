@@ -85,9 +85,9 @@ setup_met_logging() {
 
     # adjust logging system for prod/staging
     if [ "${BMIX_TARGET}x" == "stagingx" ]; then
-        BMIX_TARGET_PREFIX="logmet.stage1"
+        BMIX_TARGET_PREFIX="logs.stage1"
     else
-        BMIX_TARGET_PREFIX="logmet"
+        BMIX_TARGET_PREFIX="logs"
     fi
 
     # get our necessary logging keys
