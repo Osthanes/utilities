@@ -16,11 +16,11 @@ It requires HipChat room name and HipChat token to be specified for HipChat noti
 Synopsis:
 
     ./sendMessage.sh [-h ]
-    ./sendMessage.sh [-d] [-l notify_level] -m notify_message
+    ./sendMessage.sh [-d] [-l notification_level] -m notification_message
 
 Usage:  
 
-        [-d] [-l notify_level] -m notify_message
+        [-d] [-l notification_level] -m notification_message
         [-h]
 
 Options:
@@ -28,7 +28,7 @@ Options:
         -h      Display this help message and exit
         -m      (required) Use notification massage for user input
                 For example: sendMessage.sh -l good -m 'Got 200 response from <http://www.google.com|google> and <http://www.yahoo.com|yahoo>.  Search is alive and well' 
-        -l      (recommended) Use notification level for user input. You can set the notification level using the NOTIFY_LEVEL environment variable.
+        -l      (recommended) Use notification level for user input. You can set the notification level using the NOTIFICATION_LEVEL environment variable.
                 Valid values are 'good', 'info', and 'bad'. 
         -d      (optional) Debug information 
 
@@ -52,7 +52,7 @@ The following environment varaiables should be specify before you call this scri
                 SLACK_COLOR: Specify the color of the border along the left side of the message. 
                         It is an optional environment variable.
                         The value can either be one of 'good', 'warning', 'danger', or any hex color code (eg. #439FE0).
-                        If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
+                        If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
 
         HipChat Notification:
 
@@ -71,30 +71,35 @@ The following environment varaiables should be specify before you call this scri
                 HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
                         It is an optional environment variable.
                         The value can either be one of 'yellow', 'red', 'green', 'purple', 'gray', or 'random'.
-                        If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
+                        If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
 
-        MESSAGE_COLOR: Specify the color of the border along the left side of the message and background color.
+        NOTIFICATION_COLOR: Specify the color of the border along the left side of the message and background color.
                 It is an optional environment variable and it apply to both Slack and HipChat color.  
                 The value can either be one of 'good', 'danger', or 'info'.
-                If user specify SLACK_COLOR, HIP_CHAT_COLOR and MESSAGE_COLOR, then SLACK_COLOR and HIP_CHAT_COLOR will be used for the notification color.
-                If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
+                If user specify SLACK_COLOR, HIP_CHAT_COLOR and NOTIFICATION_COLOR, then SLACK_COLOR and HIP_CHAT_COLOR will be used for the notification color.
+                If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
 
-        NOTIFY_FILTER: Specify the message filter level.
+        NOTIFICATION_FILTER: Specify the message filter level.
                 It is an optional environment variable.
-                The value can either be one of 'good', 'info', and 'bad'.
-                The table below show with 'X" when the notification message will be send based on setting notification level and NOTIFY_FILTER.
+                The value can be one of 'good', 'info', and 'bad'.
 
-                |---------------|--------------------------------------|
-                |               |             NOTIFY_FILTER            |
-                |---------------|---------|---------|--------|---------|
-                |  notify_level | unknown |   bad   |  good  |  info   |
-                |---------------|---------|---------|--------|---------|
-                |    unknown    |    X    |    X    |    X   |   X     |                     
-                |---------------|---------|---------|--------|---------|
-                |    bad        |    X    |    X    |    X   |   X     |
-                |---------------|---------|---------|--------|---------|
-                |    good       |    X    |         |    X   |   X     |
-                |---------------|---------|---------|--------|---------|
-                |    info       |         |         |        |   X     |
-                |---------------|---------|---------|--------|---------|
+        NOTIFICATION_LEVEL: Specify the level of the notification message.
+                It is an optional environment variable.
+                The value can be one of 'good', 'info', and 'bad'.
+
+        The table below show with 'X" when the notification message will be send based on setting notification level and NOTIFICATION_FILTER.
+
+                |--------------------|--------------------------------------|
+                |                    |         NOTIFICATION_FILTER          |
+                | notification_level |----- ---|---------|--------|---------|
+                |                    | unknown |   bad   |  good  |  info   |
+                |--------------------|---------|---------|--------|---------|
+                |    unknown         |    X    |    X    |    X   |   X     |                     
+                |--------------------|---------|---------|--------|---------|
+                |    bad             |    X    |    X    |    X   |   X     |
+                |--------------------|---------|---------|--------|---------|
+                |    good            |    X    |         |    X   |   X     |
+                |--------------------|---------|---------|--------|---------|
+                |    info            |         |         |        |   X     |
+                |--------------------|---------|---------|--------|---------|
 
