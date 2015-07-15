@@ -248,6 +248,7 @@ log_and_echo() {
     if [ -n "$PIPELINE_LOGGING_FILE" ]; then
         if [ -e $PIPELINE_LOGGING_FILE ]; then
             local timestamp=`date +"%F %T %Z"`
+            L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
             echo "{\"@timestamp\": \"${timestamp}\", \"level\": \"${MSG_LEVEL}\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
         else
             # no logger file, send to syslog
