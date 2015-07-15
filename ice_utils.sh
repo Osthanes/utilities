@@ -316,4 +316,7 @@ export -f ice_build_image
 export -f ice_rmi
 export -f ice_inspect_images
 
+export -f ice_retry
+export -f ice_retry_save_output
+
 export RET_RESPONCE
