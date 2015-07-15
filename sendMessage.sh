@@ -65,13 +65,13 @@ usage()
 {
    /bin/cat << EOF
 Send notification massage.
-Usage: [-d] [-l notify_level] -m notify_message
+Usage: [-d] [-l notification_level] -m notification_message
        [-h]
 
 Options:
   -m    (required) Use notification massage for user input.  May container URLs using slack notification format <url|name>.  
         For example: sendMessage.sh -l good -m 'Got 200 response from <http://www.google.com|google> and <http://www.yahoo.com|yahoo>.  Search is alive and well' 
-  -l    (recommended) Use notification level for user input. You can set the notification level using the NOTIFY_LEVEL environment variable.
+  -l    (recommended) Use notification level for user input. You can set the notification level using the NOTIFICATION_LEVEL environment variable.
         Valid values are 'good', 'info', and 'bad'. 
   -h    Display this help message and exit
   -d    (optional) Debug information  
@@ -90,7 +90,7 @@ The following environment varaiables should be specify before you call this scri
       SLACK_COLOR: Specify the color of the border along the left side of the message. 
         It is an optional environment variable.
         The value can either be one of 'good', 'warning', 'danger', or any hex color code (eg. #439FE0).
-        If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
+        If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
 
   HipChat Notification:
       HIP_CHAT_TOKEN: Specify the HipChat token
@@ -104,31 +104,31 @@ The following environment varaiables should be specify before you call this scri
       HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
         It is an optional environment variable.
         The value can either be one of 'yellow', 'red', 'green', 'purple', 'gray', or 'random'.
-        If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
+        If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
 
-  MESSAGE_COLOR: Specify the color of the border along the left side of the message and background color.
+  NOTIFICATION_COLOR: Specify the color of the border along the left side of the message and background color.
     It is an optional environment variable and it apply to both Slack and HipChat color.  
     The value can either be one of 'good', 'danger', or 'info'.
-    If user specify SLACK_COLOR, HIP_CHAT_COLOR and MESSAGE_COLOR, then SLACK_COLOR and HIP_CHAT_COLOR will be used for the notification color.
-    If you set this optional environment, then, you don't need to set '-l notify_level' option when you call this script.
+    If user specify SLACK_COLOR, HIP_CHAT_COLOR and NOTIFICATION_COLOR, then SLACK_COLOR and HIP_CHAT_COLOR will be used for the notification color.
+    If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
 
-  NOTIFY_FILTER: Specify the message filter level.
+  NOTIFICATION_FILTER: Specify the notification message filter level.
     It is an optional environment variable.
     The value can either be one of 'good', 'info', and 'bad'.
-    The table below show with 'X" when the notification message will be send based on setting notify level and NOTIFY_FILTER.
-    |---------------|--------------------------------------|
-    |               |             NOTIFY_FILTER            |
-    |---------------|---------|---------|--------|---------|
-    |  notify_level | unknown |   bad   |  good  |  info   |
-    |---------------|---------|---------|--------|---------|
-    |    unknown    |    X    |    X    |    X   |   X     |                     
-    |---------------|---------|---------|--------|---------|
-    |    bad        |    X    |    X    |    X   |   X     |
-    |---------------|---------|---------|--------|---------|
-    |    good       |    X    |         |    X   |   X     |
-    |---------------|---------|---------|--------|---------|
-    |    info       |         |         |        |   X     |
-    |---------------|---------|---------|--------|---------|
+    The table below show with 'X" when the notification message will be send based on setting notify level and NOTIFICATION_FILTER.
+    |--------------------|--------------------------------------|
+    |                    |         NOTIFICATION_FILTER          |
+    | notification_level |---------|---------|--------|---------|
+    |                    | unknown |   bad   |  good  |  info   |
+    |--------------------|---------|---------|--------|---------|
+    |    unknown         |    X    |    X    |    X   |   X     |                     
+    |--------------------|---------|---------|--------|---------|
+    |    bad             |    X    |    X    |    X   |   X     |
+    |--------------------|---------|---------|--------|---------|
+    |    good            |    X    |         |    X   |   X     |
+    |--------------------|---------|---------|--------|---------|
+    |    info            |         |         |        |   X     |
+    |--------------------|---------|---------|--------|---------|
   
   Set DEBUG=1 for more information or -d 
 
@@ -145,7 +145,7 @@ msgid_12()
 
 msgid_13()
 {
-    echo -e "${red}Notification massage must be used with the -l notify_level option when invoking this script.${no_color}."
+    echo -e "${red}Notification massage must be used with the -l notification_level option when invoking this script.${no_color}."
 }
 
 msgid_14()
@@ -371,28 +371,38 @@ INVALID_ARGUMENTS=$*
 [ -z "${NOTIFY_MSG}" ] && usage && die ${RC_NOTIFY_MSG_USAGE}
 [ -z "${NOTIFY_LEVEL}" ] && [ -z "${NOTIFY_MSG}" ] && usage && die ${RC_NOTIFY_LEVEL_USAGE}
  
+if [ -n "$MESSAGE_COLOR" ]; then
+    NOTIFICATION_COLOR=$MESSAGE_COLOR
+fi
+if [ -n "NOTIFY_FILTER" ]; then
+    NOTIFICATION_FILTER=$NOTIFY_FILTER
+fi
+if [ -n "NOTIFICATION_LEVEL" ]; then
+    NOTIFY_LEVEL=NOTIFICATION_LEVEL
+fi
+ 
 debugme echo -e "Script Input:  NOTIFY_LEVEL = '${NOTIFY_LEVEL}', NOTIFY_MSG = '${NOTIFY_MSG}'"
 debugme echo -e "Slack environment variables:  SLACK_COLOR = '${SLACK_COLOR}' SLACK_WEBHOOK_PATH = '${SLACK_WEBHOOK_PATH}'"
 debugme echo -e "HipChat environment variables:  HIP_CHAT_COLOR = '${HIP_CHAT_COLOR}', HIP_CHAT_ROOM_NAME = '${HIP_CHAT_ROOM_NAME}, HIP_CHAT_TOKEN = '${HIP_CHAT_TOKEN}'"
-debugme echo -e "Common environment variables: MESSAGE_COLOR = '${MESSAGE_COLOR}', NOTIFY_FILTER = '${NOTIFY_FILTER}'"
+debugme echo -e "Common environment variables: NOTIFICATION_COLOR = '${NOTIFICATION_COLOR}', NOTIFICATION_FILTER = '${NOTIFICATION_FILTER}'"
  
-# Check NOTIFY_FILTER and NOTIFY_LEVEL to set sendMsg boolean  
+# Check NOTIFICATION_FILTER and NOTIFY_LEVEL to set sendMsg boolean  
 sendMsg=true
-if [ -z "$NOTIFY_FILTER" ]; then 
+if [ -z "$NOTIFICATION_FILTER" ]; then 
     if [ -n "$NOTIFY_LEVEL" ] && [ "$NOTIFY_LEVEL" == "info" ]; then
         sendMsg=false
     fi
 else 
-    NOTIFY_FILTER=$(echo $NOTIFY_FILTER | tr '[:upper:]' '[:lower:]')
-    if [ "$NOTIFY_FILTER" == "bad" ]; then
+    NOTIFICATION_FILTER=$(echo $NOTIFICATION_FILTER | tr '[:upper:]' '[:lower:]')
+    if [ "$NOTIFICATION_FILTER" == "bad" ]; then
         if [ -n "$NOTIFY_LEVEL" ] && [ "$NOTIFY_LEVEL" == "good" ] || [ "$NOTIFY_LEVEL" == "info" ]; then
             sendMsg=false
         fi
-    elif [ "$NOTIFY_FILTER" == "good" ]; then
+    elif [ "$NOTIFICATION_FILTER" == "good" ]; then
         if [ -n "$NOTIFY_LEVEL" ] && [ "$NOTIFY_LEVEL" == "info" ]; then
             sendMsg=false
         fi
-    elif [ "$NOTIFY_FILTER" != "info" ]; then
+    elif [ "$NOTIFICATION_FILTER" != "info" ]; then
         if [ -n "$NOTIFY_LEVEL" ] && [ "$NOTIFY_LEVEL" == "info" ]; then
             sendMsg=false
         fi
@@ -401,7 +411,7 @@ fi
 
 if [ "$sendMsg" == false ]; then
     if [ -n "$SLACK_WEBHOOK_PATH" ] || [ -n "$HIP_CHAT_TOKEN" ]; then
-        echo -e "skipped sending Notification message because the NOTIFY_FILTER = '${NOTIFY_FILTER}' and NOTIFY_LEVEL = '${NOTIFY_LEVEL}'"
+        echo -e "skipped sending Notification message because the NOTIFICATION_FILTER = '${NOTIFICATION_FILTER}' and NOTIFICATION_LEVEL = '${NOTIFY_LEVEL}'"
     fi
 else
     if [ -z "$SLACK_WEBHOOK_PATH" ] && [ -z "$HIP_CHAT_TOKEN" ]; then
@@ -411,10 +421,10 @@ else
         if [ -n "$SLACK_WEBHOOK_PATH" ]; then
         
             # Check if the SLACK_COLOR set in environment variable, then use SLACK_COLOR for the setting the color.
-            # If SLACK_COLOR is not set, then check if the MESSAGE_COLOR set and use MESSAGE_COLOR for the setting the color.
-            # If SLACK_COLOR and MESSAGE_COLOR are not set, then check the NOTIFY_LEVEL and set the SLACK_COLOR based on NOTIFY_LEVEL setting.
-            # If SLACK_COLOR, MESSAGE_COLOR and NOTIFY_LEVEL are not set, then don't specify the color and set SLACK_COLOR to null.
-            if [ -z "$SLACK_COLOR" ] && [ -z "$MESSAGE_COLOR" ]; then
+            # If SLACK_COLOR is not set, then check if the NOTIFICATION_COLOR set and use NOTIFICATION_COLOR for the setting the color.
+            # If SLACK_COLOR and NOTIFICATION_COLOR are not set, then check the NOTIFY_LEVEL and set the SLACK_COLOR based on NOTIFY_LEVEL setting.
+            # If SLACK_COLOR, NOTIFICATION_COLOR and NOTIFY_LEVEL are not set, then don't specify the color and set SLACK_COLOR to null.
+            if [ -z "$SLACK_COLOR" ] && [ -z "$NOTIFICATION_COLOR" ]; then
                  if [ -n "$NOTIFY_MSG" ] && [ -n "$NOTIFY_LEVEL" ]; then
                     NOTIFY_LEVEL=$(echo $NOTIFY_LEVEL | tr '[:upper:]' '[:lower:]')
                     case $NOTIFY_LEVEL in
@@ -430,8 +440,8 @@ else
                 else
                     SLACK_COLOR=""
                 fi
-            elif [ -z "$SLACK_COLOR" ] && [ -n "$MESSAGE_COLOR" ]; then
-                SLACK_COLOR=$(echo $MESSAGE_COLOR | tr '[:upper:]' '[:lower:]')
+            elif [ -z "$SLACK_COLOR" ] && [ -n "$NOTIFICATION_COLOR" ]; then
+                SLACK_COLOR=$(echo $NOTIFICATION_COLOR | tr '[:upper:]' '[:lower:]')
                 case $SLACK_COLOR in
                     GOOD|good)
                         SLACK_COLOR=$SLACK_COLOR_GOOD;;
@@ -454,10 +464,10 @@ else
         if [ -n "$HIP_CHAT_TOKEN" ]; then
 
             # Check if the HIP_CHAT_COLOR set in environment variable, then use HIP_CHAT_COLOR for the setting the color.
-            # If HIP_CHAT_COLOR is not set, then check if the MESSAGE_COLOR set and use MESSAGE_COLOR for the setting the color.
-            # If HIP_CHAT_COLOR and MESSAGE_COLOR are not set, then check the NOTIFY_LEVEL and set the HIP_CHAT_COLOR based on NOTIFY_LEVEL setting.
-            # If HIP_CHAT_COLOR, MESSAGE_COLOR and NOTIFY_LEVEL are not set, then don't specify the color and set HIP_CHAT_COLOR to null.
-            if [ -z "$HIP_CHAT_COLOR" ] && [ -z "$MESSAGE_COLOR" ]; then
+            # If HIP_CHAT_COLOR is not set, then check if the NOTIFICATION_COLOR set and use NOTIFICATION_COLOR for the setting the color.
+            # If HIP_CHAT_COLOR and NOTIFICATION_COLOR are not set, then check the NOTIFY_LEVEL and set the HIP_CHAT_COLOR based on NOTIFY_LEVEL setting.
+            # If HIP_CHAT_COLOR, NOTIFICATION_COLOR and NOTIFY_LEVEL are not set, then don't specify the color and set HIP_CHAT_COLOR to null.
+            if [ -z "$HIP_CHAT_COLOR" ] && [ -z "$NOTIFICATION_COLOR" ]; then
                  if [ -n "$NOTIFY_MSG" ] && [ -n "$NOTIFY_LEVEL" ]; then
                     NOTIFY_LEVEL=$(echo $NOTIFY_LEVEL | tr '[:upper:]' '[:lower:]')
                     case $NOTIFY_LEVEL in
@@ -471,8 +481,8 @@ else
                             HIP_CHAT_COLOR=$HIP_CHAT_COLOR_GRAY;;
                     esac
                 fi
-            elif [ -z "$HIP_CHAT_COLOR" ] && [ -n "$MESSAGE_COLOR" ]; then
-                HIP_CHAT_COLOR=$(echo $MESSAGE_COLOR | tr '[:upper:]' '[:lower:]')
+            elif [ -z "$HIP_CHAT_COLOR" ] && [ -n "$NOTIFICATION_COLOR" ]; then
+                HIP_CHAT_COLOR=$(echo $NOTIFICATION_COLOR | tr '[:upper:]' '[:lower:]')
                 case $HIP_CHAT_COLOR in
                     GOOD|good)
                         HIP_CHAT_COLOR=$HIP_CHAT_COLOR_GREEN;;

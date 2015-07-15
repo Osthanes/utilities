@@ -277,8 +277,8 @@ ice_retry(){
     local RC=0
     local retries=0
     local iceparms="$*"
+    debugme echo "ice command: ice ${iceparms}"
     while [ $retries -lt 5 ]; do
-        debugme echo "ice command: ice ${iceparms}"
         ice $iceparms
         RC=$?
         if [ ${RC} -eq 0 ]; then
@@ -299,8 +299,8 @@ ice_retry_save_output(){
     local RC=0
     local retries=0
     local iceparms="$*"
+    debugme echo "ice command: ice ${iceparms}"
     while [ $retries -lt 5 ]; do
-        debugme echo "ice command: ice ${iceparms}"
         ice $iceparms > iceretry.log
         RC=$?
         if [ ${RC} -eq 0 ]; then
