@@ -247,7 +247,8 @@ log_and_echo() {
     # always log
     if [ -n "$PIPELINE_LOGGING_FILE" ]; then
         if [ -e $PIPELINE_LOGGING_FILE ]; then
-            echo "$L_MSG" >> "$PIPELINE_LOGGING_FILE"
+            local timestamp=`date +"%F %T %Z"`
+            echo "{\"@timestamp\": \"${timestamp}\", \"level\": \"${MSG_LEVEL}\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
         else
             # no logger file, send to syslog
             logger -t "pipeline" "$L_MSG"
