@@ -81,11 +81,11 @@ The following environment varaiables should be specify before you call this scri
 
         NOTIFICATION_FILTER: Specify the message filter level.
                 It is an optional environment variable.
-                The value can either be one of 'good', 'info', and 'bad'.
+                The value can be one of 'good', 'info', and 'bad'.
 
-        notification level: Specify the level of the notification message.
+        NOTIFICATION_LEVEL: Specify the level of the notification message.
                 It is an optional environment variable.
-                The value can either be one of 'good', 'info', and 'bad'.
+                The value can be one of 'good', 'info', and 'bad'.
 
         The table below show with 'X" when the notification message will be send based on setting notification level and NOTIFICATION_FILTER.
 
