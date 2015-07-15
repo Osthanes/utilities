@@ -18,6 +18,10 @@
 # uncomment the next line to debug this script
 #set -x
 
+debugme() {
+  [[ $DEBUG = 1 ]] && "$@" || :
+}
+
 # get a value which came from a line like "name": "value",
 # trim quotes, spaces, comma from value if needed before returning
 get_trimmed_value() {
@@ -93,6 +97,7 @@ setup_met_logging() {
     fi
 
     # get our necessary logging keys
+    debugme echo "Fetching logging keys for user: $BMIX_USER space: $BMIX_SPACE org: $BMIX_ORG "
     local curl_data="user=${BMIX_USER}&passwd=${BMIX_PWD}&space=${BMIX_SPACE}&organization=${BMIX_ORG}"
     curl -k --silent -d "$curl_data" https://${BMIX_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
     local RC=$?
@@ -120,6 +125,7 @@ setup_met_logging() {
     else
         rm logmet.setup.info
         # unable to curl our tokens, fail out
+        debugme echo "Log init failed, could not get tokens, rc = $RC"
         return 10
     fi
 
@@ -169,6 +175,7 @@ setup_met_logging() {
     service mt-logstash-forwarder restart
 
     # flag logging enabled for other extensions to use
+    debugme echo "Logging setup and enabled"
     export LOGMET_LOGGING_ENABLED=1
     return 0
 }
@@ -249,7 +256,7 @@ log_and_echo() {
         if [ -e $PIPELINE_LOGGING_FILE ]; then
             local timestamp=`date +"%F %T %Z"`
             L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
-            echo "{\"@timestamp\": \"${timestamp}\", \"level\": \"${MSG_LEVEL}\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
+            echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"pipeline\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
         else
             # no logger file, send to syslog
             logger -t "pipeline" "$L_MSG"
