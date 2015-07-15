@@ -86,8 +86,10 @@ setup_met_logging() {
     # adjust logging system for prod/staging
     if [ "${BMIX_TARGET}x" == "stagingx" ]; then
         BMIX_TARGET_PREFIX="logs.stage1"
+        APT_TARGET_PREFIX="logmet.stage1"
     else
         BMIX_TARGET_PREFIX="logs"
+        APT_TARGET_PREFIX="logmet"
     fi
 
     # get our necessary logging keys
@@ -124,8 +126,8 @@ setup_met_logging() {
     # setup our repo
     local cur_dir=`pwd`
     cd /etc/apt/trusted.gpg.d
-    wget https://${BMIX_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
-    echo "deb https://${BMIX_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > /etc/apt/sources.list.d/BM_opvis_repo.list
+    wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
+    echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > /etc/apt/sources.list.d/BM_opvis_repo.list
     apt-get update
     cd $cur_dir
 
@@ -133,13 +135,37 @@ setup_met_logging() {
     apt-get -y install mt-logstash-forwarder
 
     # setup up its configuration
+    if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
+        rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
+    fi
     echo "LSF_INSTANCE_ID=\"${BMIX_USER}-pipeline\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_TARGET=\"${BMIX_TARGET_PREFIX}.opvis.bluemix.net:9091\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_TENANT_ID=\"${LOG_SPACE_ID}\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_PASSWORD=\"${LOG_LOGGING_TOKEN}\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_GROUP_ID=\"${BMIX_ORG}-pipeline\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
 
-    # restart it to pick up the config changes
+    # setup the logfile to track
+    if [ -z "$EXT_DIR" ]; then
+        export EXT_DIR=`pwd`
+    fi
+    export PIPELINE_LOGGING_FILE=$EXT_DIR/pipeline_tracking.log
+    # start it empty
+    if [ -e "$PIPELINE_LOGGING_FILE" ]; then
+        rm -f "$PIPELINE_LOGGING_FILE"
+    fi
+    echo "" > "$PIPELINE_LOGGING_FILE"
+
+    # point logstash forwarder to read that file
+    PIPELINE_LOG_CONF_FILENAME="/etc/mt-logstash-forwarder/conf.d/pipeline_log.conf"
+    PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
+
+    if [ -e "$PIPELINE_LOG_CONF_FILENAME" ]; then
+        rm -f "$PIPELINE_LOG_CONF_FILENAME"
+    fi
+
+    echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
+
+    # restart forwarder to pick up the config changes
     service mt-logstash-forwarder restart
 
     # flag logging enabled for other extensions to use
@@ -219,7 +245,17 @@ log_and_echo() {
         echo "$D_MSG" >> "$ERROR_LOG_FILE"
     fi
     # always log
-    logger -t "pipeline" "$L_MSG"
+    if [ -n "$PIPELINE_LOGGING_FILE" ]; then
+        if [ -e $PIPELINE_LOGGING_FILE ]; then
+            echo "$L_MSG" >> "$PIPELINE_LOGGING_FILE"
+        else
+            # no logger file, send to syslog
+            logger -t "pipeline" "$L_MSG"
+        fi
+    else
+        # no logger file, send to syslog
+        logger -t "pipeline" "$L_MSG"
+    fi
 }
 
 
@@ -259,3 +295,4 @@ export INFO_LEVEL
 export WARN_LEVEL
 export ERROR_LEVEL
 export OFF_LEVEL
+
