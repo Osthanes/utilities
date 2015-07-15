@@ -58,24 +58,28 @@ setup_met_logging() {
 
     if [ -z $1 ]; then
         # missing bluemix username
+        debugme echo "Log init failed, no username"
         return 1
     else
         BMIX_USER=$1
     fi
     if [ -z $2 ]; then
         # missing bluemix password
+        debugme echo "Log init failed, no pwd"
         return 2
     else
         BMIX_PWD=$2
     fi
     if [ -z $3 ]; then
         # missing bluemix space
+        debugme echo "Log init failed, no space"
         return 3
     else
         BMIX_SPACE=$3
     fi
     if [ -z $4 ]; then
         # missing bluemix org
+        debugme echo "Log init failed, no org"
         return 4
     else
         BMIX_ORG=$4
