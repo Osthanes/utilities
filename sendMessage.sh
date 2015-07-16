@@ -224,10 +224,10 @@ sendSlackNotify()
             echo -e "${green}Slack notification message has been sent succesfully.${no_color}"
             ret_value=0
         elif [ "$RESPONSE" -eq 404 ]; then
-            echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE} 'Bad Slack Webhook URL token'.${no_color})"
+            echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE} 'Bad Slack Webhook URL token').${no_color}"
             ret_value=$RESPONSE
         elif [ "$RESPONSE" -eq 500 ]; then
-            echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE} 'Salck Payload was not valid'.${no_color})"
+            echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE} 'Salck Payload was not valid').${no_color}"
             ret_value=$RESPONSE
         else
             echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE}).${no_color}"
@@ -239,7 +239,7 @@ sendSlackNotify()
 
     fi
 
-    debugme echo -e "slack_ret_value: ${slack_ret_value}"
+    debugme echo -e "slack_ret_value: ${ret_value}"
     export slack_ret_value=$ret_value
 }
 
@@ -325,13 +325,13 @@ sendHipChatNotify()
                 echo -e "${green}HipChat notification message has been sent succesfully.${no_color}"
                 ret_value=0
             elif [ "$RESPONSE" -eq 401 ]; then
-                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'Bad HipChat token'.${no_color})"
+                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'Bad HipChat token').${no_color}"
                 ret_value=$RESPONSE
             elif [ "$RESPONSE" -eq 400 ]; then
-                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat Payload was not valid'.${no_color})"
+                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat Payload was not valid').${no_color}"
                 ret_value=$RESPONSE
             elif [ "$RESPONSE" -eq 404 ]; then
-                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat room not found'.${no_color})"
+                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat room not found').${no_color}"
                 ret_value=$RESPONSE
             else
                 echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE}).${no_color}"
@@ -346,7 +346,7 @@ sendHipChatNotify()
         ret_value=$RESULT
     fi
 
-    debugme echo -e "hip_chat_ret_value: ${hip_chat_ret_value}"
+    debugme echo -e "hip_chat_ret_value: ${ret_value}"
     export hip_chat_ret_value=$ret_value
 }
 
