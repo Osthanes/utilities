@@ -286,11 +286,47 @@ print_errors() {
     
 }
 
+###################################################################
+# get the line without the color code
+###################################################################
+remove_red_color_code() {
+    local STR=$1
+
+    # get the converted string with the special characters
+    STR=`echo -e "$STR"`
+
+    # strip all ANSI color codes
+    STR=`echo $STR | sed -r 's/\x1B\[[0-9;]*[mK]//g'`
+
+    # dump the un-coded string
+    echo -e "$STR"
+}
+
+###################################################################
+# get the error.log information
+###################################################################
+get_error_info() {
+    local ERROR_LOG_INFO=""
+    local ERROR_LOG_FILE="${EXT_DIR}/errors.log"
+    local ERROR_LOG_TITLE=""
+    if [ -f "$ERROR_LOG_FILE" ]; then
+        ERROR_COUNT=`wc "${ERROR_LOG_FILE}" | awk '{print $1}'` 
+        if [ ${ERROR_COUNT} -eq 1 ]; then
+            ERROR_LOG_TITLE="\\nThere was ${ERROR_COUNT} error recorded during execution:"
+        else
+            ERROR_LOG_TITLE="\\nThere were ${ERROR_COUNT} errors recorded during execution:"
+        fi
+        ERROR_LOG_INFO=$(cat "${ERROR_LOG_FILE}" | while read line; do echo "\\n"; echo -n $(remove_red_color_code "$line"); done)
+    fi
+    echo $ERROR_LOG_TITLE $ERROR_LOG_INFO
+}
+
 # begin main execution sequence
 
 export -f setup_met_logging
 export -f log_and_echo
 export -f print_errors
+export -f get_error_info
 # export message types for log_and_echo
 # ERRORs will be collected
 export DEBUGGING
