@@ -276,9 +276,9 @@ print_errors() {
     if [ -e "${ERROR_LOG_FILE}" ]; then
         local ERROR_COUNT=`wc "${ERROR_LOG_FILE}" | awk '{print $1}'` 
         if [ ${ERROR_COUNT} -eq 1 ]; then
-            echo -e "${label_color}There was ${ERROR_COUNT} error recorded during execution:${no_color}"
+            echo -e "${label_color}There was ${ERROR_COUNT} error message recorded during execution:${no_color}"
         else
-            echo -e "${label_color}There were ${ERROR_COUNT} errors recorded during execution:${no_color}"
+            echo -e "${label_color}There were ${ERROR_COUNT} error messages recorded during execution:${no_color}"
         fi
         cat "${ERROR_LOG_FILE}"
     fi
