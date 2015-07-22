@@ -277,6 +277,7 @@ get_error_info() {
 export -f setup_met_logging
 export -f log_and_echo
 export -f print_errors
+export -f remove_red_color_code
 export -f get_error_info
 # export message types for log_and_echo
 # ERRORs will be collected
