@@ -312,9 +312,9 @@ get_error_info() {
     if [ -f "$ERROR_LOG_FILE" ]; then
         ERROR_COUNT=`wc "${ERROR_LOG_FILE}" | awk '{print $1}'` 
         if [ ${ERROR_COUNT} -eq 1 ]; then
-            ERROR_LOG_TITLE="\\nThere was ${ERROR_COUNT} error recorded during execution:"
+            ERROR_LOG_TITLE="\\nThere was ${ERROR_COUNT} error message recorded during execution:"
         else
-            ERROR_LOG_TITLE="\\nThere were ${ERROR_COUNT} errors recorded during execution:"
+            ERROR_LOG_TITLE="\\nThere were ${ERROR_COUNT} error messages recorded during execution:"
         fi
         ERROR_LOG_INFO=$(cat "${ERROR_LOG_FILE}" | while read line; do echo "\\n"; echo -n $(remove_red_color_code "$line"); done)
     fi
