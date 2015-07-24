@@ -168,13 +168,6 @@ setup_met_logging() {
     fi
     # get update
     sudo apt-get update
-    # install the logstash forwarder
-    sudo apt-get -y install mt-logstash-forwarder
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
-        return 13
-    fi
     # setup up its configuration
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
         rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
@@ -184,6 +177,14 @@ setup_met_logging() {
     echo "LSF_TENANT_ID=\"${LOG_SPACE_ID}\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_PASSWORD=\"${LOG_LOGGING_TOKEN}\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_GROUP_ID=\"${BMIX_ORG}-pipeline\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
+
+    # install the logstash forwarder
+    sudo apt-get -y install mt-logstash-forwarder
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
+        return 13
+    fi
 
     # setup the logfile to track
     if [ -z "$EXT_DIR" ]; then
