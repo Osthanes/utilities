@@ -152,30 +152,30 @@ setup_met_logging() {
     # setup our repo
     local cur_dir=`pwd`
     cd /etc/apt/trusted.gpg.d
-    sudo wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
+    debugme echo "Fetching setup the repository for apt target prefix: ${APT_TARGET_PREFIX} "
+    wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, wget BM_OpVis_repo.gpg failed, rc = $RC"
+        cd $cur_dir
         return 11
     fi
-    sudo echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > /etc/apt/sources.list.d/BM_opvis_repo.list
+    cd $cur_dir
+    sudo echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > BM_opvis_repo.list
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, echo deb url to BM_opvis_repo.list failed, rc = $RC"
         return 12
+    else
+        sudo mv BM_opvis_repo.list /etc/apt/sources.list.d/.
     fi
+    # get update
     sudo apt-get update
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not get update using 'sudo apt-get update', rc = $RC"
-        return 13
-    fi
-    cd $cur_dir
-
     # install the logstash forwarder
-    apt-get -y install mt-logstash-forwarder
+    sudo apt-get -y install mt-logstash-forwarder
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
-        return 14
+        return 13
     fi
     # setup up its configuration
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
