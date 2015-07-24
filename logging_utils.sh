@@ -57,38 +57,41 @@ setup_met_logging() {
     local BMIX_TARGET_PREFIX=""
 
     if [ -z $1 ]; then
-        # missing bluemix username
-        debugme echo "Log init failed, no username"
+        debugme echo "Log init failed, missing bluemix username"
         return 1
     else
         BMIX_USER=$1
     fi
     if [ -z $2 ]; then
-        # missing bluemix password
-        debugme echo "Log init failed, no pwd"
+        debugme echo "Log init failed, missing bluemix password"
         return 2
     else
         BMIX_PWD=$2
     fi
-    if [ -z $3 ]; then
-        # missing bluemix space
-        debugme echo "Log init failed, no space"
-        return 3
+    
+    # get bluemix space and org
+    ice_retry_save_output info 2>/dev/null
+    local RC=$?
+    if [ $RC -eq 0 ]; then
+        local ICEINFO=$(cat iceretry.log)
+        BMIX_SPACE=$(echo "$ICEINFO" | grep "Bluemix Space" | awk '{print $4}')
+        BMIX_ORG=$(echo "$ICEINFO" | grep "Bluemix Org" | awk '{print $4}')
     else
-        BMIX_SPACE=$3
+        BMIX_SPACE=$(cf target | grep "Space" | awk '{print $2}')
+        BMIX_ORG=$(cf space "$BMIX_SPACE" | grep "Org" | awk '{print $2}')
     fi
-    if [ -z $4 ]; then
-        # missing bluemix org
-        debugme echo "Log init failed, no org"
-        return 4
+    # get bluemix target
+    if [ -n "$BLUEMIX_TARGET" ]; then
+        BMIX_TARGET=$BLUEMIX_TARGET
     else
-        BMIX_ORG=$4
-    fi
-    if [ -z $5 ]; then
-        # empty target, set to prod
-        BMIX_TARGET='prod'
-    else
-        BMIX_TARGET=$5
+        BLUEMIX_API_HOST=`echo $CF_API  | awk '{print $3}' | sed '0,/.*\/\//s///'`
+        echo $BLUEMIX_API_HOST | grep 'stage1'
+        RC=$?
+        if [ $RC -eq 0 ]; then
+            BMIX_TARGET="staging"
+        else
+        BMIX_TARGET="prod"
+        fi
     fi
 
     # adjust logging system for prod/staging
@@ -98,6 +101,19 @@ setup_met_logging() {
     else
         BMIX_TARGET_PREFIX="logs"
         APT_TARGET_PREFIX="logmet"
+    fi
+    # check the space, org and target
+    if [ -z $BMIX_SPACE ]; then
+        debugme echo "Log init failed, no space"
+        return 3
+    fi
+    if [ -z $BMIX_ORG ]; then
+        debugme echo "Log init failed, no org"
+        return 4
+    fi
+    if [ -z $BMIX_TARGET ]; then
+        debugme echo "Log init failed, no target"
+        return 5
     fi
 
     # get our necessary logging keys
