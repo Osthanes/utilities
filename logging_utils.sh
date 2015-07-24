@@ -120,7 +120,7 @@ setup_met_logging() {
     debugme echo "Fetching logging keys for user: $BMIX_USER space: $BMIX_SPACE org: $BMIX_ORG "
     local curl_data="user=${BMIX_USER}&passwd=${BMIX_PWD}&space=${BMIX_SPACE}&organization=${BMIX_ORG}"
     curl -k --silent -d "$curl_data" https://${BMIX_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
-    local RC=$?
+    RC=$?
     local local_val=""
     if [ $RC == 0 ]; then
         while read -r line || [[ -n $line ]]; do 
@@ -152,14 +152,31 @@ setup_met_logging() {
     # setup our repo
     local cur_dir=`pwd`
     cd /etc/apt/trusted.gpg.d
-    wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
-    echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > /etc/apt/sources.list.d/BM_opvis_repo.list
-    apt-get update
+    sudo wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, wget BM_OpVis_repo.gpg failed, rc = $RC"
+        return 11
+    fi
+    sudo echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > /etc/apt/sources.list.d/BM_opvis_repo.list
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, echo deb url to BM_opvis_repo.list failed, rc = $RC"
+        return 12
+    fi
+    sudo apt-get update
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not get update using 'sudo apt-get update', rc = $RC"
+        return 13
+    fi
     cd $cur_dir
 
     # install the logstash forwarder
     apt-get -y install mt-logstash-forwarder
-
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
+        return 14
+    fi
     # setup up its configuration
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
         rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
