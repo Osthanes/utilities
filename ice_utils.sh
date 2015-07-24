@@ -245,31 +245,6 @@ ice_inspect_images() {
 }
 
 ###########################################################
-# Login to Container Service                              #
-# Using ice login command  with bluemix api key           #
-###########################################################
-ice_login_check() {
-    local RC=0
-    local retries=0
-    mkdir -p ~/.ice
-    debugme cat "${EXT_DIR}/${ICE_CFG}"
-    cp ${EXT_DIR}/${ICE_CFG} ~/.ice/ice-cfg.ini
-    debugme cat ~/.ice/ice-cfg.ini
-    debugme echo "config.json:"
-    debugme cat /home/jenkins/.cf/config.json | cut -c1-2
-    debugme cat /home/jenkins/.cf/config.json | cut -c3-
-    debugme echo "testing ice login via ice info command"
-    ice_retry info 2>/dev/null
-    RC=$?
-    if [ ${RC} -eq 0 ]; then
-        ice_retry images 2>/dev/null
-        RC=$?
-    fi
-    return $RC
-}
-
-
-###########################################################
 # Ice command retry function with not output
 # 
 ###########################################################
@@ -314,6 +289,136 @@ ice_retry_save_output(){
     return $RC
 }
 
+################################
+# Print EnablementInfo         #
+################################
+printEnablementInfo() {
+    echo -e "${label_color}No namespace has been defined for this user ${no_color}"
+    echo -e "Please check the following: "
+    echo -e "   - Login to Bluemix ( https://console.ng.bluemix.net )"
+    echo -e "   - Select the 'IBM Containers' icon from the Dashboard" 
+    echo -e "   - Select 'Create a Container'"
+    echo -e "Or using the ICE command line: "
+    echo -e "   - ice login -a api.ng.bluemix.net -H containers-api.ng.bluemix.net -R registry.ng.bluemix.net"
+    echo -e "   - ${label_color}ice namespace set [your-desired-namespace] ${no_color}"
+}
+
+###########################################################
+# Login to Container Service                              #
+# Using ice login command  with bluemix api key           #
+###########################################################
+ice_login_check() {
+    local RC=0
+    local retries=0
+    mkdir -p ~/.ice
+    debugme cat "${EXT_DIR}/${ICE_CFG}"
+    cp ${EXT_DIR}/${ICE_CFG} ~/.ice/ice-cfg.ini
+    debugme cat ~/.ice/ice-cfg.ini
+    debugme echo "config.json:"
+    debugme cat /home/jenkins/.cf/config.json | cut -c1-2
+    debugme cat /home/jenkins/.cf/config.json | cut -c3-
+    debugme echo "testing ice login via ice info command"
+    ice_retry info 2>/dev/null
+    RC=$?
+    if [ ${RC} -eq 0 ]; then
+        ice_retry images 2>/dev/null
+        RC=$?
+    fi
+    return $RC
+}
+
+################################
+# Login to Container Service   #
+################################
+login_to_container_service(){
+    # Check if we are already logged in via ice command 
+    ice_login_check
+    local RC=$?
+    # check login result 
+    if [ $RC -ne 0 ]; then
+        if [ -n "$API_KEY" ]; then 
+            echo -e "${label_color}Logging on with API_KEY${no_color}"
+            ice_retry $ICE_ARGS login --key ${API_KEY} 2> /dev/null
+            RC=$?
+        elif [ -n "$BLUEMIX_USER" ] || [ ! -f ~/.cf/config.json ]; then
+            # need to gather information from the environment 
+            # Get the Bluemix user and password information 
+            echo -e "${label_color}Logging on with Bluemix userid and Bluemix password${no_color}"
+            if [ -z "$BLUEMIX_USER" ]; then 
+                echo -e "${red} Please set BLUEMIX_USER on environment ${no_color}" | tee -a "$ERROR_LOG_FILE"
+                ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get BLUEMIX_USER ID. $(get_error_info)"
+                ${EXT_DIR}/print_help.sh
+                return 1
+            fi 
+            if [ -z "$BLUEMIX_PASSWORD" ]; then 
+                echo -e "${red} Please set BLUEMIX_PASSWORD as an environment property environment ${no_color}" | tee -a "$ERROR_LOG_FILE"
+                ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get BLUEMIX_PASSWORD. $(get_error_info)"
+                ${EXT_DIR}/print_help.sh
+                return 1
+            fi 
+            if [ -z "$BLUEMIX_ORG" ]; then 
+                export BLUEMIX_ORG=$BLUEMIX_USER
+                echo -e "${label_color} Using ${BLUEMIX_ORG} for Bluemix organization, please set BLUEMIX_ORG on the environment if you wish to change this. ${no_color} "
+            fi 
+            if [ -z "$BLUEMIX_SPACE" ]; then
+                export BLUEMIX_SPACE="dev"
+                echo -e "${label_color} Using ${BLUEMIX_SPACE} for Bluemix space, please set BLUEMIX_SPACE on the environment if you wish to change this. ${no_color} "
+            fi 
+            echo -e "${label_color}Targetting information.  Can be updated by setting environment variables${no_color}"
+            echo "BLUEMIX_USER: ${BLUEMIX_USER}"
+            echo "BLUEMIX_SPACE: ${BLUEMIX_SPACE}"
+            echo "BLUEMIX_ORG: ${BLUEMIX_ORG}"
+            echo "BLUEMIX_PASSWORD: xxxxx"
+            echo ""
+            echo -e "${label_color}Logging on with BLUEMIX_USER${no_color}"
+            ice_retry $ICE_ARGS login --cf --host ${CCS_API_HOST} --registry ${CCS_REGISTRY_HOST} --api ${BLUEMIX_API_HOST} --user ${BLUEMIX_USER} --psswd ${BLUEMIX_PASSWORD} --org ${BLUEMIX_ORG} --space ${BLUEMIX_SPACE} 2> /dev/null
+            RC=$?
+        else
+            echo -e "${label_color}Logged in into IBM Container Service using credentials passed from IBM DevOps Services ${no_color}"
+        fi
+    fi
+    # check login result 
+    if [ $RC -ne 0 ]; then
+        echo -e "${red}Failed to log in to IBM Container Service${no_color}" | tee -a "$ERROR_LOG_FILE"
+        ice namespace get 2> /dev/null
+        HAS_NAMESPACE=$?
+        if [ $HAS_NAMESPACE -eq 1 ]; then 
+            printEnablementInfo        
+        fi 
+        ${EXT_DIR}/print_help.sh
+        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to IBM Container Service CLI. $(get_error_info)"
+    else 
+        echo -e "${green}Successfully logged in to IBM Containers${no_color}"
+        ice info 2> /dev/null
+    fi 
+    return $RC
+} 
+
+########################
+# REGISTRY INFORMATION #
+########################
+get_name_space() {
+    NAMESPACE=$(ice namespace get)
+    RC=$?
+    if [ $RC -eq 0 ]; then
+        if [ -z $NAMESPACE ]; then
+            log_and_echo "$ERROR" "Did not discover namespace using ice namespace get, but no error was returned"
+            printEnablementInfo
+            ${EXT_DIR}/print_help.sh
+            ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to discover namespace. $(get_error_info)"
+            RC=1
+        else
+            export NAMESPACE=$NAMESPACE
+        fi
+    else 
+        log_and_echo "$ERROR" "ice namespace get' returned an error"
+        printEnablementInfo
+        ${EXT_DIR}/print_help.sh    
+        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get namespace. $(get_error_info)"
+    fi 
+    return $RC
+}
+
 export -f ice_login_with_api_key
 export -f ice_login_with_bluemix_user
 export -f ice_login_check
@@ -325,5 +430,9 @@ export -f ice_inspect_images
 
 export -f ice_retry
 export -f ice_retry_save_output
+export -f printEnablementInfo
+export -f login_to_container_service
+export -f get_name_space
 
 export RET_RESPONCE
+export NAMESPACE
