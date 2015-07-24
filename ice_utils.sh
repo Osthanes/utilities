@@ -395,7 +395,7 @@ login_to_container_service(){
 } 
 
 ########################
-# REGISTRY INFORMATION #
+# Get Name Space       #
 ########################
 get_name_space() {
     NAMESPACE=$(ice namespace get)

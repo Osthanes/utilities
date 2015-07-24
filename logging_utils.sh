@@ -152,9 +152,9 @@ setup_met_logging() {
     # setup our repo
     local cur_dir=`pwd`
     cd /etc/apt/trusted.gpg.d
-    wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
-    echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > /etc/apt/sources.list.d/BM_opvis_repo.list
-    apt-get update
+    sudo wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
+    sudo echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > /etc/apt/sources.list.d/BM_opvis_repo.list
+    sudo apt-get update
     cd $cur_dir
 
     # install the logstash forwarder
