@@ -84,13 +84,13 @@ setup_met_logging() {
     if [ -n "$BLUEMIX_TARGET" ]; then
         BMIX_TARGET=$BLUEMIX_TARGET
     else
-        BLUEMIX_API_HOST=`echo $CF_API  | awk '{print $3}' | sed '0,/.*\/\//s///'`
+        BLUEMIX_API_HOST=`echo cf api | awk '{print $3}' | sed '0,/.*\/\//s///'`
         echo $BLUEMIX_API_HOST | grep 'stage1'
         RC=$?
         if [ $RC -eq 0 ]; then
             BMIX_TARGET="staging"
         else
-        BMIX_TARGET="prod"
+            BMIX_TARGET="prod"
         fi
     fi
 
