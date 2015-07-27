@@ -373,16 +373,14 @@ login_to_container_service(){
             echo -e "${label_color}Logging on with BLUEMIX_USER${no_color}"
             ice_retry $ICE_ARGS login --cf --host ${CCS_API_HOST} --registry ${CCS_REGISTRY_HOST} --api ${BLUEMIX_API_HOST} --user ${BLUEMIX_USER} --psswd ${BLUEMIX_PASSWORD} --org ${BLUEMIX_ORG} --space ${BLUEMIX_SPACE} 2> /dev/null
             RC=$?
-            if [ $RC -eq 0 ]: then
+            if [ $RC -eq 0 ]; then
                 echo -e "${label_color}Logged in into IBM Container Service using ice login command${no_color}"
+                ice info 2> /dev/null
             elif [ $RC -eq 2 ]; then
                 echo -e "${label_color}Logged in into IBM Container Service using ice login command returns error code ${RC}${no_color}"
                 RC=0
             else
                 echo -e "${red}Failed to log in to IBM Container Service${no_color}. ice login command returns error code ${RC}" | tee -a "$ERROR_LOG_FILE"
-            else 
-                echo -e "${green}Successfully logged in to IBM Containers${no_color}"
-                ice info 2> /dev/null
             fi 
         fi
     else
