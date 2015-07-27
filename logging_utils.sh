@@ -171,22 +171,23 @@ setup_met_logging() {
     # setup up its configuration
     ls /etc
     if [ ! -d "/etc/mt-logstash-forwarder" ]; then
-        mkdir /etc/mt-logstash-forwarder
+        sudo mkdir /etc/mt-logstash-forwarder
     else
         echo "Dirtectory /etc/mt-logstash-forwarder exist"
     fi
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
-        rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
+        sudo rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
         echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh deleted"
     else
         echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh does not exist"
     fi
     ls /etc/mt-logstash-forwarder
-    echo "LSF_INSTANCE_ID=\"${BMIX_USER}-pipeline\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
-    echo "LSF_TARGET=\"${BMIX_TARGET_PREFIX}.opvis.bluemix.net:9091\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
-    echo "LSF_TENANT_ID=\"${LOG_SPACE_ID}\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
-    echo "LSF_PASSWORD=\"${LOG_LOGGING_TOKEN}\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
-    echo "LSF_GROUP_ID=\"${BMIX_ORG}-pipeline\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
+    echo "LSF_INSTANCE_ID=\"${BMIX_USER}-pipeline\"" >> mt-lsf-config.sh
+    echo "LSF_TARGET=\"${BMIX_TARGET_PREFIX}.opvis.bluemix.net:9091\"" >> mt-lsf-config.sh
+    echo "LSF_TENANT_ID=\"${LOG_SPACE_ID}\"" >> mt-lsf-config.sh
+    echo "LSF_PASSWORD=\"${LOG_LOGGING_TOKEN}\"" >> mt-lsf-config.sh
+    echo "LSF_GROUP_ID=\"${BMIX_ORG}-pipeline\"" >> mt-lsf-config.sh
+    sudo mv mt-lsf-config.sh /etc/mt-logstash-forwarder/.
 
     # install the logstash forwarder
     local cur_dir=`pwd`
@@ -220,7 +221,7 @@ setup_met_logging() {
     echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
 
     # restart forwarder to pick up the config changes
-    service mt-logstash-forwarder restart
+    sudo service mt-logstash-forwarder restart
 
     # flag logging enabled for other extensions to use
     debugme echo "Logging setup and enabled"
