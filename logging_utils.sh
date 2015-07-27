@@ -170,20 +170,17 @@ setup_met_logging() {
     sudo apt-get update
 
     # install the logstash forwarder
+    local cur_dir=`pwd`
+    cd /etc/apt/trusted.gpg.d
     sudo apt-get -y install mt-logstash-forwarder
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
+        cd $cur_dir
         return 13
     fi
+    cd $cur_dir
 
-    # setup up its configuration
-#    ls /etc
-#    if [ ! -d "/etc/mt-logstash-forwarder" ]; then
-#        sudo mkdir /etc/mt-logstash-forwarder
-#    else
-#        echo "Dirtectory /etc/mt-logstash-forwarder exist"
-#    fi
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
         sudo rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
         echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh deleted"

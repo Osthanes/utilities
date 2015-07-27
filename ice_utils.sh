@@ -373,18 +373,24 @@ login_to_container_service(){
             echo -e "${label_color}Logging on with BLUEMIX_USER${no_color}"
             ice_retry $ICE_ARGS login --cf --host ${CCS_API_HOST} --registry ${CCS_REGISTRY_HOST} --api ${BLUEMIX_API_HOST} --user ${BLUEMIX_USER} --psswd ${BLUEMIX_PASSWORD} --org ${BLUEMIX_ORG} --space ${BLUEMIX_SPACE} 2> /dev/null
             RC=$?
-        else
-            echo -e "${label_color}Logged in into IBM Container Service using credentials passed from IBM DevOps Services ${no_color}"
+            if [ $RC -eq 0 ]: then
+                echo -e "${label_color}Logged in into IBM Container Service using ice login command${no_color}"
+            elif [ $RC -eq 2 ]; then
+                echo -e "${label_color}Logged in into IBM Container Service using ice login command returns error code ${RC}${no_color}"
+                RC=0
+            else
+                echo -e "${red}Failed to log in to IBM Container Service${no_color}. ice login command returns error code ${RC}" | tee -a "$ERROR_LOG_FILE"
+            else 
+                echo -e "${green}Successfully logged in to IBM Containers${no_color}"
+                ice info 2> /dev/null
+            fi 
         fi
+    else
+        echo -e "${label_color}Logged in into IBM Container Service using credentials passed from IBM DevOps Services ${no_color}"
     fi
     # check login result 
     if [ $RC -ne 0 ]; then
         echo -e "${red}Failed to log in to IBM Container Service${no_color}" | tee -a "$ERROR_LOG_FILE"
-        ice namespace get 2> /dev/null
-        HAS_NAMESPACE=$?
-        if [ $HAS_NAMESPACE -eq 1 ]; then 
-            printEnablementInfo        
-        fi 
         ${EXT_DIR}/print_help.sh
         ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to IBM Container Service CLI. $(get_error_info)"
     else 
