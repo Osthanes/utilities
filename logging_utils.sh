@@ -169,9 +169,19 @@ setup_met_logging() {
     # get update
     sudo apt-get update
     # setup up its configuration
+    ls /etc
+    if [ ! -d "/etc/mt-logstash-forwarder" ]; then
+        mkdir /etc/mt-logstash-forwarder
+    else
+        echo "Dirtectory /etc/mt-logstash-forwarder exist"
+    fi
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
         rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
+        echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh deleted"
+    else
+        echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh does not exist"
     fi
+    ls /etc/mt-logstash-forwarder
     echo "LSF_INSTANCE_ID=\"${BMIX_USER}-pipeline\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_TARGET=\"${BMIX_TARGET_PREFIX}.opvis.bluemix.net:9091\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
     echo "LSF_TENANT_ID=\"${LOG_SPACE_ID}\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
