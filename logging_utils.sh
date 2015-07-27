@@ -170,16 +170,12 @@ setup_met_logging() {
     sudo apt-get update
 
     # install the logstash forwarder
-    local cur_dir=`pwd`
-    cd /etc
     sudo apt-get -y install mt-logstash-forwarder
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
         return 13
     fi
-    cd $cur_dir 
-
 
     # setup up its configuration
 #    ls /etc
