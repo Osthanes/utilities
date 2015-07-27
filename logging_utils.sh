@@ -168,13 +168,26 @@ setup_met_logging() {
     fi
     # get update
     sudo apt-get update
-    # setup up its configuration
-    ls /etc
-    if [ ! -d "/etc/mt-logstash-forwarder" ]; then
-        sudo mkdir /etc/mt-logstash-forwarder
-    else
-        echo "Dirtectory /etc/mt-logstash-forwarder exist"
+
+    # install the logstash forwarder
+    local cur_dir=`pwd`
+    cd /etc
+    sudo apt-get -y install mt-logstash-forwarder
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
+        return 13
     fi
+    cd $cur_dir 
+
+
+    # setup up its configuration
+#    ls /etc
+#    if [ ! -d "/etc/mt-logstash-forwarder" ]; then
+#        sudo mkdir /etc/mt-logstash-forwarder
+#    else
+#        echo "Dirtectory /etc/mt-logstash-forwarder exist"
+#    fi
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
         sudo rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
         echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh deleted"
@@ -189,16 +202,6 @@ setup_met_logging() {
     echo "LSF_GROUP_ID=\"${BMIX_ORG}-pipeline\"" >> mt-lsf-config.sh
     sudo mv mt-lsf-config.sh /etc/mt-logstash-forwarder/.
 
-    # install the logstash forwarder
-    local cur_dir=`pwd`
-    cd /etc
-    sudo apt-get -y install mt-logstash-forwarder
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
-        return 13
-    fi
-    cd $cur_dir 
     # setup the logfile to track
     if [ -z "$EXT_DIR" ]; then
         export EXT_DIR=`pwd`
