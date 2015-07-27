@@ -96,10 +96,10 @@ setup_met_logging() {
 
     # adjust logging system for prod/staging
     if [ "${BMIX_TARGET}x" == "stagingx" ]; then
-        BMIX_TARGET_PREFIX="logs.stage1"
+        BMIX_TARGET_PREFIX="logmet.stage1"
         APT_TARGET_PREFIX="logmet.stage1"
     else
-        BMIX_TARGET_PREFIX="logs"
+        BMIX_TARGET_PREFIX="logmet"
         APT_TARGET_PREFIX="logmet"
     fi
     # check the space, org and target
@@ -179,13 +179,15 @@ setup_met_logging() {
     echo "LSF_GROUP_ID=\"${BMIX_ORG}-pipeline\"" >>/etc/mt-logstash-forwarder/mt-lsf-config.sh
 
     # install the logstash forwarder
+    local cur_dir=`pwd`
+    cd /etc
     sudo apt-get -y install mt-logstash-forwarder
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
         return 13
     fi
-
+    cd $cur_dir 
     # setup the logfile to track
     if [ -z "$EXT_DIR" ]; then
         export EXT_DIR=`pwd`
