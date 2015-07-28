@@ -375,10 +375,12 @@ login_to_container_service(){
             RC=$?
             if [ $RC -eq 0 ]; then
                 echo -e "${label_color}Logged in into IBM Container Service using ice login command${no_color}"
-                ice info 2> /dev/null
+                ice_login_check
+                RC=$?
             elif [ $RC -eq 2 ]; then
                 echo -e "${label_color}Logged in into IBM Container Service using ice login command returns error code ${RC}${no_color}"
-                RC=0
+                ice_login_check
+                RC=$?
             else
                 echo -e "${red}Failed to log in to IBM Container Service${no_color}. ice login command returns error code ${RC}" | tee -a "$ERROR_LOG_FILE"
             fi 

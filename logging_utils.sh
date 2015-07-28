@@ -167,12 +167,14 @@ setup_met_logging() {
         sudo mv BM_opvis_repo.list /etc/apt/sources.list.d/.
     fi
     # get update
-    sudo apt-get update
+    debugme echo "run sudo apt-get update"
+    sudo apt-get update >/dev/null
 
     # install the logstash forwarder
+    debugme echo "install the logstash forwarder"
     local cur_dir=`pwd`
     cd /etc/apt/trusted.gpg.d
-    sudo apt-get -y install mt-logstash-forwarder
+    sudo apt-get -y install mt-logstash-forwarder >/dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
