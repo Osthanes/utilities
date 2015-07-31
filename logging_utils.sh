@@ -42,12 +42,54 @@ get_trimmed_value() {
     echo "$trimmedString"
 }
 
+# setup repository
+# install mt-logstash-forwarder
+install_logstash_forwarder() {
+    if [ -z $1 ]; then
+        debugme echo "Log init failed, missing target prefix"
+        return 11
+    else
+        TARGET_PREFIX=$1
+    fi
+    # setup our repo
+    debugme echo "Fetching setup the repository for apt target prefix: ${TARGET_PREFIX} "
+    wget https://${TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, wget BM_OpVis_repo.gpg failed, rc = $RC"
+        return 12
+    else
+        sudo mv BM_OpVis_repo.gpg /etc/apt/trusted.gpg.d/.
+    fi
+    echo "deb https://${TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > BM_opvis_repo.list
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, echo deb url to BM_opvis_repo.list failed, rc = $RC"
+        return 13
+    else
+        sudo mv BM_opvis_repo.list /etc/apt/sources.list.d/.
+    fi
+    # get update
+    debugme echo "run sudo apt-get update"
+    sudo apt-get update >/dev/null
+
+    # install the logstash forwarder
+    debugme echo "install the logstash forwarder"
+    local cur_dir=`pwd`
+    cd /etc/apt/trusted.gpg.d
+    sudo apt-get -y install mt-logstash-forwarder >/dev/null
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
+        cd $cur_dir
+        return 14
+    fi
+    cd $cur_dir
+    return 0
+}
+
 # set up for calls to the logging service - takes parameters
 # User   : required, bluemix userid
 # Pwd    : required, bluemix password
-# Space  : required, bluemix space
-# Org    : required, bluemix org
-# Target : optional, may be 'prod' or 'staging'.  defaults to 'prod'
 setup_met_logging() {
     local BMIX_USER=""
     local BMIX_PWD=""
@@ -55,6 +97,7 @@ setup_met_logging() {
     local BMIX_ORG=""
     local BMIX_TARGET=""
     local BMIX_TARGET_PREFIX=""
+    local RC=0
 
     if [ -z $1 ]; then
         debugme echo "Log init failed, missing bluemix username"
@@ -67,18 +110,22 @@ setup_met_logging() {
         return 2
     else
         BMIX_PWD=$2
-    fi
-    
+    fi   
     # get bluemix space and org
-    ice_retry_save_output info 2>/dev/null
-    local RC=$?
-    if [ $RC -eq 0 ]; then
-        local ICEINFO=$(cat iceretry.log)
-        BMIX_SPACE=$(echo "$ICEINFO" | grep "Bluemix Space" | awk '{print $4}')
-        BMIX_ORG=$(echo "$ICEINFO" | grep "Bluemix Org" | awk '{print $4}')
+    if [ -z "$BLUEMIX_SPACE" ] || [ -z "$BLUEMIX_ORG" ]; then 
+        ice_retry_save_output info 2>/dev/null
+        RC=$?
+        if [ $RC -eq 0 ]; then
+            local ICEINFO=$(cat iceretry.log)
+            BMIX_SPACE=$(echo "$ICEINFO" | grep "Bluemix Space" | awk '{print $4}')
+            BMIX_ORG=$(echo "$ICEINFO" | grep "Bluemix Org" | awk '{print $4}')
+        else
+            BMIX_SPACE=$(cf target | grep "Space" | awk '{print $2}')
+            BMIX_ORG=$(cf space "$BMIX_SPACE" | grep "Org" | awk '{print $2}')
+        fi
     else
-        BMIX_SPACE=$(cf target | grep "Space" | awk '{print $2}')
-        BMIX_ORG=$(cf space "$BMIX_SPACE" | grep "Org" | awk '{print $2}')
+        BMIX_SPACE="$BLUEMIX_SPACE"
+        BMIX_ORG="$BLUEMIX_ORG"
     fi
     # get bluemix target
     if [ -n "$BLUEMIX_TARGET" ]; then
@@ -93,13 +140,12 @@ setup_met_logging() {
             BMIX_TARGET="prod"
         fi
     fi
-
     # adjust logging system for prod/staging
     if [ "${BMIX_TARGET}x" == "stagingx" ]; then
-        BMIX_TARGET_PREFIX="logmet.stage1"
+        BMIX_TARGET_PREFIX="logs.stage1"
         APT_TARGET_PREFIX="logmet.stage1"
     else
-        BMIX_TARGET_PREFIX="logmet"
+        BMIX_TARGET_PREFIX="logs"
         APT_TARGET_PREFIX="logmet"
     fi
     # check the space, org and target
@@ -115,11 +161,10 @@ setup_met_logging() {
         debugme echo "Log init failed, no target"
         return 5
     fi
-
     # get our necessary logging keys
     debugme echo "Fetching logging keys for user: $BMIX_USER space: $BMIX_SPACE org: $BMIX_ORG "
     local curl_data="user=${BMIX_USER}&passwd=${BMIX_PWD}&space=${BMIX_SPACE}&organization=${BMIX_ORG}"
-    curl -k --silent -d "$curl_data" https://${BMIX_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
+    curl -k --silent -d "$curl_data" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
     RC=$?
     local local_val=""
     if [ $RC == 0 ]; then
@@ -149,39 +194,13 @@ setup_met_logging() {
         return 10
     fi
 
-    # setup our repo
-    debugme echo "Fetching setup the repository for apt target prefix: ${APT_TARGET_PREFIX} "
-    wget https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt/BM_OpVis_repo.gpg
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, wget BM_OpVis_repo.gpg failed, rc = $RC"
-        return 11
-    else
-        sudo mv BM_OpVis_repo.gpg /etc/apt/trusted.gpg.d/.
-    fi
-    echo "deb https://${APT_TARGET_PREFIX}.opvis.bluemix.net:5443/apt stable main" > BM_opvis_repo.list
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, echo deb url to BM_opvis_repo.list failed, rc = $RC"
-        return 12
-    else
-        sudo mv BM_opvis_repo.list /etc/apt/sources.list.d/.
-    fi
-    # get update
-    debugme echo "run sudo apt-get update"
-    sudo apt-get update >/dev/null
-
-    # install the logstash forwarder
-    debugme echo "install the logstash forwarder"
-    local cur_dir=`pwd`
-    cd /etc/apt/trusted.gpg.d
-    sudo apt-get -y install mt-logstash-forwarder >/dev/null
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not install the logstash forwarder, rc = $RC"
-        cd $cur_dir
-        return 13
-    fi
-    cd $cur_dir
+    # install logstash-forwarder
+    # this may move into the base image
+#    install_logstash_forwarder "${APT_TARGET_PREFIX}"
+#    RC=$?
+#    if [ $RC -ne 0 ]; then
+#        return $RC
+#    fi
 
     if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
         sudo rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
