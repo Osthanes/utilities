@@ -228,18 +228,24 @@ setup_met_logging() {
     echo "" > "$PIPELINE_LOGGING_FILE"
 
     # point logstash forwarder to read that file
-    PIPELINE_LOG_CONF_FILENAME="/etc/mt-logstash-forwarder/conf.d/pipeline_log.conf"
+    PIPELINE_LOG_CONF_DIR="/etc/mt-logstash-forwarder/conf.d"
+    PIPELINE_LOG_CONF_FILENAME="pipeline_log.conf"
     PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
-
-    if [ -e "$PIPELINE_LOG_CONF_FILENAME" ]; then
-        rm -f "$PIPELINE_LOG_CONF_FILENAME"
+    if [ -e "$PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME" ]; then
+        sudo rm -f "PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
     fi
-
     echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
+    sudo mv $PIPELINE_LOG_CONF_FILENAME $PIPELINE_LOG_CONF_DIR/.    
 
     # restart forwarder to pick up the config changes
+    debugme echo "Restart mt-logstash-forwarder service"
     sudo service mt-logstash-forwarder restart
-
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not restart mt-logstash-forwarder service, rc = $RC"
+        return 15
+    fi
+    
     # flag logging enabled for other extensions to use
     debugme echo "Logging setup and enabled"
     export LOGMET_LOGGING_ENABLED=1
