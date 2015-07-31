@@ -327,84 +327,51 @@ ice_login_check() {
     return $RC
 }
 
-################################
-# Get trimmed value            #
-################################
-# get a value which came from a line like "name": "value",
-# trim quotes, spaces, comma from value if needed before returning
-get_trimmed_value() {
-    local trimmedString=$1
-    if [ "${trimmedString}x" == "x" ]; then
-        echo
-        return
-    fi
-    # trim leading and trailing spaces, if any
-    trimmedString="$(echo -e ${trimmedString} | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-    # remove leading "
-    trimmedString="${trimmedString#\"}"
-    # remove trailing , if there is one
-    trimmedString="${trimmedString%,}"
-    # remove trailing "
-    trimmedString="${trimmedString%\"}"
-    
-    echo "$trimmedString"
-}
-
 #####################################################
 # get targeting information from config.json file   #
 #####################################################
-get_targeting_information() {
-    local ORG_FLAG=false
-    local SPACE_FLAG=false
+get_targeting_info() {
     local local_val=""
-    while read -r line || [[ -n $line ]]; do 
-        if [[ $line == *"\"AccessToken\":"* ]]; then
-            local_val=$(get_trimmed_value "${line#*:}")
-            if [ "${local_val}x" != "x" ]; then
-                if [ -z "$BLUEMIX_ACCESS_TOKEN" ]; then
-                    export BLUEMIX_ACCESS_TOKEN=$local_val
-                else
-                    debugme echo "failed to get BLUEMIX_ACCESS_TOKEN" 
-                fi
-            fi
-        elif [[ $line == *"\"UaaEndpoint\":"* ]]; then
-            local_val=$(get_trimmed_value "${line#*:}")
-            if [ "${local_val}x" != "x" ]; then
-                if [ -z "$UAA_END_POINT_URL" ]; then
-                    export UAA_END_POINT_URL=$local_val
-                else
-                    debugme echo "failed to get UAA_END_POINT_URL" 
-                fi
-            fi
-        elif [[ $line == *"\"OrganizationFields\":"* ]]; then
-            ORG_FLAG=true
-        elif [[ $line == *"\"SpaceFields\":"* ]]; then
-            SPACE_FLAG=true
-        elif [[ $line == *"\"Name\":"* ]] && [ "$ORG_FLAG" == "true" ]; then
-            local_val=$(get_trimmed_value "${line#*:}")
-            if [ "${local_val}x" != "x" ]; then
-                if [ -z "$BLUEMIX_ORG" ]; then
-                    export BLUEMIX_ORG=$local_val
-                else
-                    debugme echo "failed to get BLUEMIX_ORG" 
-                fi
-            fi
-            ORG_FLAG=false
-        elif [[ $line == *"\"Name\":"* ]] && [ "$SPACE_FLAG" == "true" ]; then
-            local_val=$(get_trimmed_value "${line#*:}")
-            if [ "${local_val}x" != "x" ]; then
-                if [ -z "$BLUEMIX_SPACE" ]; then
-                    export BLUEMIX_SPACE=$local_val
-                else
-                    debugme echo "failed to get BLUEMIX_SPACE" 
-                fi
-            fi
-            SPACE_FLAG=false
+    local CONFIG_JSON_DATA=$(cat ~/.cf/config.json)
+    # get BLUEMIX_ACCESS_TOKEN
+    local_val=$(echo $CONFIG_JSON_DATA | awk -F'"AccessToken":' '{print $2;}' | awk -F'"' '{print $2;}')
+    if [ "${local_val}x" != "x" ]; then
+        if [ -z "$BLUEMIX_ACCESS_TOKEN" ]; then
+            export BLUEMIX_ACCESS_TOKEN=$local_val
+        fi
+    else
+        debugme echo "failed to get BLUEMIX_ACCESS_TOKEN" 
     fi
-    done <~/.cf/config.json
+    # get UAA_END_POINT_URL
+    local_val="http://uaa$(echo $BLUEMIX_API_HOST | sed 's/[^\.]*//')"
+    if [ "${local_val}x" != "x" ]; then
+        if [ -z "$UAA_END_POINT_URL" ]; then
+            export UAA_END_POINT_URL=$local_val
+        fi
+    else
+        debugme echo "failed to get UAA_END_POINT_URL" 
+    fi
+    #get BLUEMIX_ORG
+    local_val=$(echo $CONFIG_JSON_DATA | awk -F'"OrganizationFields":' '{print $2;}' | awk -F'"' '{print $4;}')
+    if [ "${local_val}x" != "x" ]; then
+        if [ -z "$BLUEMIX_ORG" ]; then
+            export BLUEMIX_ORG=$local_val
+        fi
+    else
+        debugme echo "failed to get BLUEMIX_ORG" 
+    fi
+    #get BLUEMIX_SPACE
+    local_val=$(echo $CONFIG_JSON_DATA | awk -F'"SpaceFields":' '{print $2;}' | awk -F'"' '{print $4;}')
+    if [ "${local_val}x" != "x" ]; then
+        if [ -z "$BLUEMIX_SPACE" ]; then
+            export BLUEMIX_SPACE=$local_val
+        fi
+    else
+        debugme echo "failed to get BLUEMIX_SPACE" 
+    fi
+    # get BLUEMIX_USER
     if [ -z "$BLUEMIX_USER" ]; then
-        local user_id_flag=0
-        USER_INFO=$(curl  -k --silent -H "Content-type: application/json" -H "Authorization: $BLUEMIX_ACCESS_TOKEN" -X GET $UAA_END_POINT_URL/userinfo)
+        USER_INFO=$(curl --fail -k --silent -H "Content-type: application/json" -H "Authorization: $BLUEMIX_ACCESS_TOKEN" -X GET $UAA_END_POINT_URL/userinfo)
         RC=$?
         if [ $RC -eq 0 ]; then
             export BLUEMIX_USER=$(echo $USER_INFO | awk -F'name":' '{print $2;}' | awk -F'"' '{print $2;}')
@@ -412,7 +379,9 @@ get_targeting_information() {
                 debugme echo "failed to get BLUEMIX_USER"
             fi
         else
-            debugme echo "failed to get BLUEMIX_USER"           
+            debugme echo "failed to get BLUEMIX_USER. invalid token or url"   
+            debugme echo "Token: ${BLUEMIX_ACCESS_TOKEN}" 
+            debugme echo "URL: ${UAA_END_POINT_URL}/userinfo"       
         fi
     fi
     return 0
@@ -476,7 +445,7 @@ login_using_bluemix_user_password(){
 login_to_container_service(){
     # set targeting information from config.json file
     if [ -f ~/.cf/config.json ]; then
-        get_targeting_information
+        get_targeting_info
     fi
     # Check if we are already logged in via ice command 
     ice_login_check
@@ -545,8 +514,7 @@ export -f ice_inspect_images
 export -f ice_retry
 export -f ice_retry_save_output
 export -f printEnablementInfo
-export -f get_targeting_information
-export -f get_trimmed_value
+export -f get_targeting_info
 export -f login_using_bluemix_user_password
 export -f login_to_container_service
 export -f get_name_space
