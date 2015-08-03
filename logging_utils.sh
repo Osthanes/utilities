@@ -406,6 +406,7 @@ export -f get_error_info
 # ERRORs will be collected
 export DEBUGGING
 export INFO
+export SUCCESSFUL
 export LABEL
 export WARN
 export ERROR
