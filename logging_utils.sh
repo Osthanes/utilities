@@ -254,7 +254,7 @@ setup_met_logging() {
 
 DEBUGGING="DEBUGGING_LEVEL"
 INFO="INFO_LEVEL"
-SUCCESSFULL="INFO_LEVEL"
+SUCCESSFUL="SUCCESSFUL_LEVEL"
 LABEL="LABEL_LEVEL"
 WARN="WARN_LEVEL"
 ERROR="ERROR_LEVEL"
@@ -298,7 +298,7 @@ log_and_echo() {
         local pre="${label_color}"
         local post="${no_color}"
         local MSG_LEVEL=$INFO_LEVEL
-    elif [ "$SUCCESSFULL" == "$MSG_TYPE" ]; then
+    elif [ "$SUCCESSFUL" == "$MSG_TYPE" ]; then
         shift
         local pre="${green}"
         local post="${no_color}"
