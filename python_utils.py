@@ -381,7 +381,7 @@ def create_bound_app_for_service (service, plan=DEFAULT_SERVICE_PLAN):
 # find given bound app, and look for the passed bound service in cf.  once
 # found in VCAP_SERVICES, look for the credentials setting, and return the
 # dict.  Raises Exception on errors
-def get_credentials_from_bound_app (service, binding_app=None):
+def get_credentials_from_bound_app (service, binding_app=None, plan=DEFAULT_SERVICE_PLAN):
     # if no binding app parm passed, go looking to find a bound app for this one
     if binding_app == None:
         binding_app = find_bound_app_for_service(service)
@@ -389,7 +389,7 @@ def get_credentials_from_bound_app (service, binding_app=None):
     if binding_app == None:
         setupSpace = os.environ.get('SETUP_SERVICE_SPACE')
         if (setupSpace != None) and (setupSpace.lower() == "true"):
-            binding_app = create_bound_app_for_service(service=service, plan=DEFAULT_SERVICE_PLAN)
+            binding_app = create_bound_app_for_service(service=service, plan=plan)
         else:
             raise Exception("Service \"" + service + "\" is not loaded and bound in this space.  " + LABEL_COLOR + "Please add the service to the space and bind it to an app, or set the parameter to allow the space to be setup automatically" + LABEL_NO_COLOR)
 
