@@ -237,14 +237,77 @@ setup_met_logging() {
     echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
     sudo mv $PIPELINE_LOG_CONF_FILENAME $PIPELINE_LOG_CONF_DIR/.    
 
-    # restart forwarder to pick up the config changes
-    debugme echo "Restart mt-logstash-forwarder service"
-    sudo service mt-logstash-forwarder restart
+
+    # alternative solusion whithout restart service
+    # Multi-tenant coniguation files
+sudo cat > /etc/mt-logstash-forwarder/conf.d/multitenant.conf << EOL
+{
+    # The multi-tenant section defines the owner of the log data
+    # in a multi-tenant environment
+    # This file is generated from the /etc/init/mt-logstash-forwarder.conf
+    # upstart script
+    "multitenant": {
+        # Tell the tenant_id, password and other keypair values to insert
+        "tenant_id": "${LSF_TENANT_ID}",
+        "password" : "${LSF_PASSWORD}",
+        "inserted_keypairs" : {
+            "stack_id" : "${LSF_GROUP_ID}",
+            "instance_id" : "${LSF_INSTANCE_ID}"
+        }
+    }
+}
+EOL
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not restart mt-logstash-forwarder service, rc = $RC"
+        debugme echo "Log init failed, could not create multitenant.conf file, rc = $RC"
         return 15
     fi
+    # Network coniguation files
+sudo cat > /etc/mt-logstash-forwarder/conf.d/network.conf << EOL
+{
+    # The network section covers network configuration
+    # This file is generated from the /etc/init/mt-logstash-forwarder.conf
+    # upstart script 
+
+    "network": {
+        # A list of downstream servers listening for our messages.
+        # logstash-forwarder will pick one at random and only switch if
+        # the selected one appears to be dead or unresponsive
+        "servers": [ "${LSF_TARGET}" ],
+
+        # Network timeout in seconds. This is most important for
+        # logstash-forwarder determining whether to stop waiting for an
+        # acknowledgement from the downstream server. If an timeout is reached,
+        # logstash-forwarder will assume the connection or server is bad and
+        # will connect to a server chosen at random from the servers list.
+        "timeout": 15
+    }
+}
+EOL
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not create network.conf file, rc = $RC"
+        return 16
+    fi
+
+    # Run the application in the foreground - output goes to stdout 
+    # which the supervisord will redirect to a specified file.
+    /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config /etc/mt-logstash-forwarder/conf.d -spool-size 100 -quiet true 2> /dev/null &
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not start mt-logstash-forwarder service, rc = $RC"
+        return 17
+    fi
+
+
+    # restart forwarder to pick up the config changes
+#    debugme echo "Restart mt-logstash-forwarder service"
+#    sudo service mt-logstash-forwarder restart
+#    RC=$?
+#    if [ $RC -ne 0 ]; then
+#        debugme echo "Log init failed, could not restart mt-logstash-forwarder service, rc = $RC"
+#        return 15
+#    fi
     
     # flag logging enabled for other extensions to use
     debugme echo "Logging setup and enabled"
