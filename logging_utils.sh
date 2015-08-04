@@ -235,7 +235,13 @@ setup_met_logging() {
         sudo rm -f "PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
     fi
     echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
+    cat $PIPELINE_LOG_CONF_FILENAME
     sudo mv $PIPELINE_LOG_CONF_FILENAME $PIPELINE_LOG_CONF_DIR/.    
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not create ${PIPELINE_LOG_CONF_FILENAME} file, rc = $RC"
+        return 15
+    fi
 
 
     # alternative solusion whithout restart service
@@ -258,11 +264,12 @@ setup_met_logging() {
     echo -e "       }" >> multitenant.conf
     echo -e "   }" >> multitenant.conf
     echo -e "}" >> multitenant.conf
+    cat multitenant.conf
     sudo mv multitenant.conf $PIPELINE_LOG_CONF_DIR/.    
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create multitenant.conf file, rc = $RC"
-        return 15
+        return 16
     fi
 
     # Network coniguation files
@@ -283,11 +290,12 @@ setup_met_logging() {
     echo -e "       \"timeout\": 15" >> network.conf
     echo -e "   }" >> network.conf
     echo -e "}" >> network.conf
+    cat multitenant.conf
     sudo mv network.conf $PIPELINE_LOG_CONF_DIR/.    
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create network.conf file, rc = $RC"
-        return 16
+        return 17
     fi
 
     # Run the application in the foreground - output goes to stdout 
@@ -296,7 +304,7 @@ setup_met_logging() {
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start mt-logstash-forwarder service, rc = $RC"
-        return 17
+        return 18
     fi
 
     # restart forwarder to pick up the config changes
@@ -305,7 +313,7 @@ setup_met_logging() {
 #    RC=$?
 #    if [ $RC -ne 0 ]; then
 #        debugme echo "Log init failed, could not restart mt-logstash-forwarder service, rc = $RC"
-#        return 15
+#        return 19
 #    fi
     
     # flag logging enabled for other extensions to use
