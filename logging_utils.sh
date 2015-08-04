@@ -240,7 +240,7 @@ setup_met_logging() {
 
     # alternative solusion whithout restart service
     # Multi-tenant coniguation files
-sudo cat > /etc/mt-logstash-forwarder/conf.d/multitenant.conf << EOL
+sudo cat > multitenant.conf << EOL
 {
     # The multi-tenant section defines the owner of the log data
     # in a multi-tenant environment
@@ -262,8 +262,10 @@ EOL
         debugme echo "Log init failed, could not create multitenant.conf file, rc = $RC"
         return 15
     fi
+    sudo mv multitenant.conf $PIPELINE_LOG_CONF_DIR/.    
+
     # Network coniguation files
-sudo cat > /etc/mt-logstash-forwarder/conf.d/network.conf << EOL
+sudo cat > network.conf << EOL
 {
     # The network section covers network configuration
     # This file is generated from the /etc/init/mt-logstash-forwarder.conf
@@ -289,6 +291,7 @@ EOL
         debugme echo "Log init failed, could not create network.conf file, rc = $RC"
         return 16
     fi
+    sudo mv network.conf $PIPELINE_LOG_CONF_DIR/.    
 
     # Run the application in the foreground - output goes to stdout 
     # which the supervisord will redirect to a specified file.
@@ -298,7 +301,6 @@ EOL
         debugme echo "Log init failed, could not start mt-logstash-forwarder service, rc = $RC"
         return 17
     fi
-
 
     # restart forwarder to pick up the config changes
 #    debugme echo "Restart mt-logstash-forwarder service"
