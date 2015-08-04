@@ -254,6 +254,7 @@ setup_met_logging() {
 
 DEBUGGING="DEBUGGING_LEVEL"
 INFO="INFO_LEVEL"
+SUCCESSFUL="SUCCESSFUL_LEVEL"
 LABEL="LABEL_LEVEL"
 WARN="WARN_LEVEL"
 ERROR="ERROR_LEVEL"
@@ -295,6 +296,11 @@ log_and_echo() {
     elif [ "$LABEL" == "$MSG_TYPE" ]; then
         shift
         local pre="${label_color}"
+        local post="${no_color}"
+        local MSG_LEVEL=$INFO_LEVEL
+    elif [ "$SUCCESSFUL" == "$MSG_TYPE" ]; then
+        shift
+        local pre="${green}"
         local post="${no_color}"
         local MSG_LEVEL=$INFO_LEVEL
     elif [ "$WARN" == "$MSG_TYPE" ]; then
@@ -400,6 +406,7 @@ export -f get_error_info
 # ERRORs will be collected
 export DEBUGGING
 export INFO
+export SUCCESSFUL
 export LABEL
 export WARN
 export ERROR
