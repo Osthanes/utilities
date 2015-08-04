@@ -279,7 +279,7 @@ setup_met_logging() {
     echo -e "       # A list of downstream servers listening for our messages." >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # logstash-forwarder will pick one at random and only switch if" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # the selected one appears to be dead or unresponsive" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       \"servers\": [ \"${BMIX_TARGET_PREFIX}\" ]," >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       \"servers\": [ \"${BMIX_TARGET_PREFIX}.opvis.bluemix.net:9091\" ]," >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # Network timeout in seconds. This is most important for" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # logstash-forwarder determining whether to stop waiting for an" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # acknowledgement from the downstream server. If an timeout is reached," >> $PIPELINE_LOG_CONF_DIR/network.conf
