@@ -288,7 +288,7 @@ setup_met_logging() {
     echo -e "       \"timeout\": 15" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "   }" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "}" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    cat $PIPELINE_LOG_CONF_DIR/multitenant.conf    
+    cat $PIPELINE_LOG_CONF_DIR/network.conf    
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create network.conf file, rc = $RC"
