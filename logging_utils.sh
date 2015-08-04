@@ -255,11 +255,11 @@ setup_met_logging() {
     echo -e "   # upstart script" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
     echo -e "   \"multitenant\": {" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
     echo -e "       # Tell the tenant_id, password and other keypair values to insert" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "       \"tenant_id\": \"${LSF_TENANT_ID}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "       \"password\" : \"${LSF_PASSWORD}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "       \"tenant_id\": \"${LOG_SPACE_ID}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "       \"password\" : \"${LOG_LOGGING_TOKEN}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
     echo -e "       \"inserted_keypairs\" : {" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "           \"stack_id\" : \"${LSF_GROUP_ID}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "           \"instance_id\" : \"${LSF_INSTANCE_ID}\"" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "           \"stack_id\" : \"${BMIX_ORG}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "           \"instance_id\" : \"${BMIX_USER}\"" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
     echo -e "       }" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
     echo -e "   }" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
     echo -e "}" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
@@ -279,7 +279,7 @@ setup_met_logging() {
     echo -e "       # A list of downstream servers listening for our messages." >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # logstash-forwarder will pick one at random and only switch if" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # the selected one appears to be dead or unresponsive" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       \"servers\": [ \"${LSF_TARGET}\" ]," >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       \"servers\": [ \"${BMIX_TARGET_PREFIX}\" ]," >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # Network timeout in seconds. This is most important for" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # logstash-forwarder determining whether to stop waiting for an" >> $PIPELINE_LOG_CONF_DIR/network.conf
     echo -e "       # acknowledgement from the downstream server. If an timeout is reached," >> $PIPELINE_LOG_CONF_DIR/network.conf
