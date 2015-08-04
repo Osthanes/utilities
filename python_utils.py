@@ -58,12 +58,17 @@ def setup_logging ():
     else:
         logger.setLevel(logging.INFO)
 
-    # if logmet is enabled, send the log through syslog as well
+    # if logmet is enabled, send the log through our pipeline logfile as well
     if os.environ.get('LOGMET_LOGGING_ENABLED'):
-        handler = logging.handlers.SysLogHandler(address='/dev/log')
-        logger.addHandler(handler)
-        # don't send debug info through syslog
-        handler.setLevel(logging.INFO)
+        pipeline_logfile = os.environ.get('PIPELINE_LOGGING_FILE')
+        if pipeline_logfile:
+            handler = logging.FileHandler(pipeline_logfile)
+            logger.addHandler(handler)
+            # don't send debug info through syslog
+            handler.setLevel(logging.INFO)
+            # set formatting on this to be json style
+            formatter = logging.Formatter('{\"@timestamp\": \"%(asctime)s\", \"loglevel\": \"%(levelname)s\", \"module\": \"%(name)s\", \"message\": \"%(message)s\"}\n')
+            handler.setFormatter(formatter)
 
     # in any case, dump logging to the screen
     handler = logging.StreamHandler(sys.stdout)
