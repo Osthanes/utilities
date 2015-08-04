@@ -77,6 +77,62 @@ def setup_logging ():
     
     return logger
 
+
+# load bearer token and space guid from ~/.cf/config.json
+# used for a variety of things, including calls to the CCS server
+def load_cf_auth_info ():
+
+    bearer_token = None
+    space_guid = None
+
+    cf_filename = "%s/.cf/config.json" % os.path.expanduser("~")
+
+    with open( cf_filename ) as cf_config_file:
+        config_info = json.load(cf_config_file)
+        bearer_token = config_info["AccessToken"]
+        if bearer_token.lower().startswith("bearer "):
+            bearer_token=bearer_token[7:]
+        space_guid = config_info["SpaceFields"]["Guid"]
+
+    return bearer_token, space_guid
+
+
+# check with cf to find the api server
+# adjust to find the ICE api server
+# return both
+def find_api_servers ():
+
+    cf_api_server = None
+    ice_api_server = None
+
+    command = "cf api"
+    proc = Popen([command], shell=True, stdout=PIPE, stderr=PIPE)
+    out, err = proc.communicate();
+
+    if proc.returncode != 0:
+        msg = "Error: Unable to find api server, rc was " + str(proc.returncode)
+        if LOGGER:
+            LOGGER.error(msg)
+        raise Exception(msg)
+
+    # cf api output comes back in the form:
+    # API endpoint: https://api.ng.bluemix.net (API version: 2.23.0)
+    # so take out just the part we need
+    words = out.split()
+    for word in words:
+        if word.startswith("https://"):
+            cf_api_server=word
+    # get ice server as well by adjusting cf server
+    ice_api_server = cf_api_server
+    ice_api_server = ice_api_server.replace ( 'api.', 'containers-api.')
+    if DEBUG=="1":
+        if LOGGER:
+            LOGGER.debug("cf_api_server set to " + str(cf_api_server))
+            LOGGER.debug("ice_api_server set to " + str(ice_api_server))
+
+    return cf_api_server, ice_api_server
+
+
 # return the remaining time to wait
 # first time, will prime from env var and subtract init script time 
 #
