@@ -240,58 +240,55 @@ setup_met_logging() {
 
     # alternative solusion whithout restart service
     # Multi-tenant coniguation files
-sudo cat > multitenant.conf << EOL
-{
-    # The multi-tenant section defines the owner of the log data
-    # in a multi-tenant environment
-    # This file is generated from the /etc/init/mt-logstash-forwarder.conf
-    # upstart script
-    "multitenant": {
-        # Tell the tenant_id, password and other keypair values to insert
-        "tenant_id": "${LSF_TENANT_ID}",
-        "password" : "${LSF_PASSWORD}",
-        "inserted_keypairs" : {
-            "stack_id" : "${LSF_GROUP_ID}",
-            "instance_id" : "${LSF_INSTANCE_ID}"
-        }
-    }
-}
-EOL
+    if [ -e "$PIPELINE_LOG_CONF_DIR/multitenant.conf" ]; then
+        sudo rm -f "PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
+    fi
+    echo -e "{" >> multitenant.conf
+    echo -e "   # The multi-tenant section defines the owner of the log data" >> multitenant.conf
+    echo -e "   # in a multi-tenant environment" >> multitenant.conf
+    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> multitenant.conf
+    echo -e "   # upstart script" >> multitenant.conf
+    echo -e "   \"multitenant\": {" >> multitenant.conf
+    echo -e "       # Tell the tenant_id, password and other keypair values to insert" >> multitenant.conf
+    echo -e "       \"tenant_id\": \"${LSF_TENANT_ID}\"," >> multitenant.conf
+    echo -e "       \"password\" : \"${LSF_PASSWORD}\"," >> multitenant.conf
+    echo -e "       \"inserted_keypairs\" : {" >> multitenant.conf
+    echo -e "           \"stack_id\" : \"${LSF_GROUP_ID}\"," >> multitenant.conf
+    echo -e "           \"instance_id\" : \"${LSF_INSTANCE_ID}\"" >> multitenant.conf
+    echo -e "       }" >> multitenant.conf
+    echo -e "   }" >> multitenant.conf
+    echo -e "}" >> multitenant.conf
+    sudo mv multitenant.conf $PIPELINE_LOG_CONF_DIR/.    
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create multitenant.conf file, rc = $RC"
         return 15
     fi
-    sudo mv multitenant.conf $PIPELINE_LOG_CONF_DIR/.    
 
     # Network coniguation files
-sudo cat > network.conf << EOL
-{
-    # The network section covers network configuration
-    # This file is generated from the /etc/init/mt-logstash-forwarder.conf
-    # upstart script 
-
-    "network": {
-        # A list of downstream servers listening for our messages.
-        # logstash-forwarder will pick one at random and only switch if
-        # the selected one appears to be dead or unresponsive
-        "servers": [ "${LSF_TARGET}" ],
-
-        # Network timeout in seconds. This is most important for
-        # logstash-forwarder determining whether to stop waiting for an
-        # acknowledgement from the downstream server. If an timeout is reached,
-        # logstash-forwarder will assume the connection or server is bad and
-        # will connect to a server chosen at random from the servers list.
-        "timeout": 15
-    }
-}
-EOL
+    echo -e "{" >> network.conf
+    echo -e "   # The network section covers network configuration" >> network.conf
+    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> network.conf
+    echo -e "   # upstart script" >> network.conf
+    echo -e "   \"network\": {" >> network.conf
+    echo -e "       # A list of downstream servers listening for our messages." >> network.conf
+    echo -e "       # logstash-forwarder will pick one at random and only switch if" >> network.conf
+    echo -e "       # the selected one appears to be dead or unresponsive" >> network.conf
+    echo -e "       \"servers\": [ \"${LSF_TARGET}\" ]," >> network.conf
+    echo -e "       # Network timeout in seconds. This is most important for" >> network.conf
+    echo -e "       # logstash-forwarder determining whether to stop waiting for an" >> network.conf
+    echo -e "       # acknowledgement from the downstream server. If an timeout is reached," >> network.conf
+    echo -e "       # logstash-forwarder will assume the connection or server is bad and" >> network.conf
+    echo -e "       # will connect to a server chosen at random from the servers list." >> network.conf
+    echo -e "       \"timeout\": 15" >> network.conf
+    echo -e "   }" >> network.conf
+    echo -e "}" >> network.conf
+    sudo mv network.conf $PIPELINE_LOG_CONF_DIR/.    
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create network.conf file, rc = $RC"
         return 16
     fi
-    sudo mv network.conf $PIPELINE_LOG_CONF_DIR/.    
 
     # Run the application in the foreground - output goes to stdout 
     # which the supervisord will redirect to a specified file.
