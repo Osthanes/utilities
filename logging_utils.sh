@@ -227,45 +227,43 @@ setup_met_logging() {
     fi
     echo "" > "$PIPELINE_LOGGING_FILE"
 
-    # point logstash forwarder to read that file
-    PIPELINE_LOG_CONF_DIR="/etc/mt-logstash-forwarder/conf.d"
+    # point logstash forwarder to read config files
+    mkdir ${EXT_DIR}/conf.d
+    PIPELINE_LOG_CONF_DIR="${EXT_DIR}/conf.d"
     PIPELINE_LOG_CONF_FILENAME="pipeline_log.conf"
     PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
     if [ -e "$PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME" ]; then
-        sudo rm -f "PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
+        rm -f "PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
     fi
-    echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
-    cat $PIPELINE_LOG_CONF_FILENAME
-    sudo mv $PIPELINE_LOG_CONF_FILENAME $PIPELINE_LOG_CONF_DIR/.    
+    echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
+    cat $PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME  
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create ${PIPELINE_LOG_CONF_FILENAME} file, rc = $RC"
         return 15
     fi
 
-
     # alternative solusion whithout restart service
     # Multi-tenant coniguation files
     if [ -e "$PIPELINE_LOG_CONF_DIR/multitenant.conf" ]; then
-        sudo rm -f "PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
+        rm -f "PIPELINE_LOG_CONF_DIR/multitenant.conf"
     fi
-    echo -e "{" >> multitenant.conf
-    echo -e "   # The multi-tenant section defines the owner of the log data" >> multitenant.conf
-    echo -e "   # in a multi-tenant environment" >> multitenant.conf
-    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> multitenant.conf
-    echo -e "   # upstart script" >> multitenant.conf
-    echo -e "   \"multitenant\": {" >> multitenant.conf
-    echo -e "       # Tell the tenant_id, password and other keypair values to insert" >> multitenant.conf
-    echo -e "       \"tenant_id\": \"${LSF_TENANT_ID}\"," >> multitenant.conf
-    echo -e "       \"password\" : \"${LSF_PASSWORD}\"," >> multitenant.conf
-    echo -e "       \"inserted_keypairs\" : {" >> multitenant.conf
-    echo -e "           \"stack_id\" : \"${LSF_GROUP_ID}\"," >> multitenant.conf
-    echo -e "           \"instance_id\" : \"${LSF_INSTANCE_ID}\"" >> multitenant.conf
-    echo -e "       }" >> multitenant.conf
-    echo -e "   }" >> multitenant.conf
-    echo -e "}" >> multitenant.conf
-    cat multitenant.conf
-    sudo mv multitenant.conf $PIPELINE_LOG_CONF_DIR/.    
+    echo -e "{" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "   # The multi-tenant section defines the owner of the log data" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "   # in a multi-tenant environment" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "   # upstart script" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "   \"multitenant\": {" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "       # Tell the tenant_id, password and other keypair values to insert" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "       \"tenant_id\": \"${LSF_TENANT_ID}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "       \"password\" : \"${LSF_PASSWORD}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "       \"inserted_keypairs\" : {" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "           \"stack_id\" : \"${LSF_GROUP_ID}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "           \"instance_id\" : \"${LSF_INSTANCE_ID}\"" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "       }" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "   }" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    echo -e "}" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
+    cat $PIPELINE_LOG_CONF_DIR/multitenant.conf    
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create multitenant.conf file, rc = $RC"
@@ -273,25 +271,24 @@ setup_met_logging() {
     fi
 
     # Network coniguation files
-    echo -e "{" >> network.conf
-    echo -e "   # The network section covers network configuration" >> network.conf
-    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> network.conf
-    echo -e "   # upstart script" >> network.conf
-    echo -e "   \"network\": {" >> network.conf
-    echo -e "       # A list of downstream servers listening for our messages." >> network.conf
-    echo -e "       # logstash-forwarder will pick one at random and only switch if" >> network.conf
-    echo -e "       # the selected one appears to be dead or unresponsive" >> network.conf
-    echo -e "       \"servers\": [ \"${LSF_TARGET}\" ]," >> network.conf
-    echo -e "       # Network timeout in seconds. This is most important for" >> network.conf
-    echo -e "       # logstash-forwarder determining whether to stop waiting for an" >> network.conf
-    echo -e "       # acknowledgement from the downstream server. If an timeout is reached," >> network.conf
-    echo -e "       # logstash-forwarder will assume the connection or server is bad and" >> network.conf
-    echo -e "       # will connect to a server chosen at random from the servers list." >> network.conf
-    echo -e "       \"timeout\": 15" >> network.conf
-    echo -e "   }" >> network.conf
-    echo -e "}" >> network.conf
-    cat multitenant.conf
-    sudo mv network.conf $PIPELINE_LOG_CONF_DIR/.    
+    echo -e "{" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "   # The network section covers network configuration" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "   # upstart script" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "   \"network\": {" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # A list of downstream servers listening for our messages." >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # logstash-forwarder will pick one at random and only switch if" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # the selected one appears to be dead or unresponsive" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       \"servers\": [ \"${LSF_TARGET}\" ]," >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # Network timeout in seconds. This is most important for" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # logstash-forwarder determining whether to stop waiting for an" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # acknowledgement from the downstream server. If an timeout is reached," >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # logstash-forwarder will assume the connection or server is bad and" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       # will connect to a server chosen at random from the servers list." >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "       \"timeout\": 15" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "   }" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    echo -e "}" >> $PIPELINE_LOG_CONF_DIR/network.conf
+    cat $PIPELINE_LOG_CONF_DIR/multitenant.conf    
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not create network.conf file, rc = $RC"
@@ -300,7 +297,8 @@ setup_met_logging() {
 
     # Run the application in the foreground - output goes to stdout 
     # which the supervisord will redirect to a specified file.
-    /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config /etc/mt-logstash-forwarder/conf.d -spool-size 100 -quiet true 2> /dev/null &
+    
+    /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config ${EXT_DIR}/conf.d -spool-size 100 -quiet true 2> /dev/null &
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start mt-logstash-forwarder service, rc = $RC"
