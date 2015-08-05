@@ -348,12 +348,10 @@ log_and_echo() {
             echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"pipeline\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
 cat $PIPELINE_LOGGING_FILE
         else
-echo "Bahram1"
             # no logger file, send to syslog
             logger -t "pipeline" "$L_MSG"
         fi
     else
-echo "Bahram2"
         # no logger file, send to syslog
         logger -t "pipeline" "$L_MSG"
     fi
