@@ -97,6 +97,7 @@ setup_met_logging() {
     local BMIX_ORG=""
     local BMIX_TARGET=""
     local BMIX_TARGET_PREFIX=""
+    local APT_TARGET_PREFIX=""
     local RC=0
 
     if [ -z $1 ]; then
@@ -116,7 +117,7 @@ setup_met_logging() {
         ice_retry_save_output info 2>/dev/null
         RC=$?
         if [ $RC -eq 0 ]; then
-            ICEINFO=$(cat iceretry.log)
+            local ICEINFO=$(cat iceretry.log)
             BMIX_SPACE=$(echo "$ICEINFO" | grep "Bluemix Space" | awk '{print $4}')
             BMIX_ORG=$(echo "$ICEINFO" | grep "Bluemix Org" | awk '{print $4}')
         else
@@ -131,7 +132,7 @@ setup_met_logging() {
     if [ -n "$BLUEMIX_TARGET" ]; then
         BMIX_TARGET=$BLUEMIX_TARGET
     else
-        BLUEMIX_API_HOST=`echo cf api | awk '{print $3}' | sed '0,/.*\/\//s///'`
+        local BLUEMIX_API_HOST=`echo cf api | awk '{print $3}' | sed '0,/.*\/\//s///'`
         echo $BLUEMIX_API_HOST | grep 'stage1'
         RC=$?
         if [ $RC -eq 0 ]; then
@@ -206,7 +207,7 @@ setup_met_logging() {
     echo "" > "$PIPELINE_LOGGING_FILE"
 
     # point logstash forwarder to read config files
-    CONF_D_DIR="${EXT_DIR}/conf.d"
+    local CONF_D_DIR="${EXT_DIR}/conf.d"
     if [[ ! -e ${CONF_D_DIR} ]]; then
         mkdir ${CONF_D_DIR}
     fi
@@ -357,13 +358,6 @@ echo "Bahram2"
         logger -t "pipeline" "$L_MSG"
     fi
 }
-
-COUNTER=0
-while [  $COUNTER -lt 10 ]; do
-  echo The counter is $COUNTER
-  log_and_echo "$ERROR" "testing#${COUNTER}"
-  let COUNTER=COUNTER+1 
-done
 
 print_errors() {
     if [ -e "${ERROR_LOG_FILE}" ]; then
