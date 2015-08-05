@@ -97,6 +97,7 @@ setup_met_logging() {
     local BMIX_ORG=""
     local BMIX_TARGET=""
     local BMIX_TARGET_PREFIX=""
+    local APT_TARGET_PREFIX=""
     local RC=0
 
     if [ -z $1 ]; then
@@ -131,7 +132,7 @@ setup_met_logging() {
     if [ -n "$BLUEMIX_TARGET" ]; then
         BMIX_TARGET=$BLUEMIX_TARGET
     else
-        BLUEMIX_API_HOST=`echo cf api | awk '{print $3}' | sed '0,/.*\/\//s///'`
+        local BLUEMIX_API_HOST=`echo cf api | awk '{print $3}' | sed '0,/.*\/\//s///'`
         echo $BLUEMIX_API_HOST | grep 'stage1'
         RC=$?
         if [ $RC -eq 0 ]; then
@@ -142,10 +143,10 @@ setup_met_logging() {
     fi
     # adjust logging system for prod/staging
     if [ "${BMIX_TARGET}x" == "stagingx" ]; then
-        BMIX_TARGET_PREFIX="logs.stage1"
+        BMIX_TARGET_PREFIX="logs.stage1.opvis.bluemix.net:9091"
         APT_TARGET_PREFIX="logmet.stage1"
     else
-        BMIX_TARGET_PREFIX="logs"
+        BMIX_TARGET_PREFIX="logs.opvis.bluemix.net:9091"
         APT_TARGET_PREFIX="logmet"
     fi
     # check the space, org and target
@@ -191,30 +192,8 @@ setup_met_logging() {
         rm logmet.setup.info
         # unable to curl our tokens, fail out
         debugme echo "Log init failed, could not get tokens, rc = $RC"
-        return 10
+        return 6
     fi
-
-    # install logstash-forwarder
-    # this may move into the base image
-#    install_logstash_forwarder "${APT_TARGET_PREFIX}"
-#    RC=$?
-#    if [ $RC -ne 0 ]; then
-#        return $RC
-#    fi
-
-    if [ -e "/etc/mt-logstash-forwarder/mt-lsf-config.sh" ]; then
-        sudo rm -f /etc/mt-logstash-forwarder/mt-lsf-config.sh
-        echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh deleted"
-    else
-        echo "File /etc/mt-logstash-forwarder/mt-lsf-config.sh does not exist"
-    fi
-    ls /etc/mt-logstash-forwarder
-    echo "LSF_INSTANCE_ID=\"${BMIX_USER}-pipeline\"" >> mt-lsf-config.sh
-    echo "LSF_TARGET=\"${BMIX_TARGET_PREFIX}.opvis.bluemix.net:9091\"" >> mt-lsf-config.sh
-    echo "LSF_TENANT_ID=\"${LOG_SPACE_ID}\"" >> mt-lsf-config.sh
-    echo "LSF_PASSWORD=\"${LOG_LOGGING_TOKEN}\"" >> mt-lsf-config.sh
-    echo "LSF_GROUP_ID=\"${BMIX_ORG}-pipeline\"" >> mt-lsf-config.sh
-    sudo mv mt-lsf-config.sh /etc/mt-logstash-forwarder/.
 
     # setup the logfile to track
     if [ -z "$EXT_DIR" ]; then
@@ -228,91 +207,55 @@ setup_met_logging() {
     echo "" > "$PIPELINE_LOGGING_FILE"
 
     # point logstash forwarder to read config files
-    mkdir ${EXT_DIR}/conf.d
-    PIPELINE_LOG_CONF_DIR="${EXT_DIR}/conf.d"
-    PIPELINE_LOG_CONF_FILENAME="pipeline_log.conf"
-    PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
-    if [ -e "$PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME" ]; then
-        rm -f "PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
+    local CONF_D_DIR="${EXT_DIR}/conf.d"
+    if [[ ! -e ${CONF_D_DIR} ]]; then
+        mkdir ${CONF_D_DIR}
     fi
-    echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME"
-    cat $PIPELINE_LOG_CONF_DIR/$PIPELINE_LOG_CONF_FILENAME  
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not create ${PIPELINE_LOG_CONF_FILENAME} file, rc = $RC"
-        return 15
-    fi
+    local PIPELINE_LOG_CONF_FILENAME="${CONF_D_DIR}/pipeline_log.conf"
+    local MULTITENANT_CONF_FILE="${CONF_D_DIR}/multitenant.conf"
+    local NETWORK_CONF_FILE="${CONF_D_DIR}/network.conf"
 
-    # alternative solusion whithout restart service
-    # Multi-tenant coniguation files
-    if [ -e "$PIPELINE_LOG_CONF_DIR/multitenant.conf" ]; then
-        rm -f "PIPELINE_LOG_CONF_DIR/multitenant.conf"
+    # set pipeline log coniguation file
+    local PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
+    if [ -e "$PIPELINE_LOG_CONF_FILENAME" ]; then
+        rm -f "$PIPELINE_LOG_CONF_FILENAME"
     fi
-    echo -e "{" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "   # The multi-tenant section defines the owner of the log data" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "   # in a multi-tenant environment" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "   # upstart script" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "   \"multitenant\": {" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "       # Tell the tenant_id, password and other keypair values to insert" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "       \"tenant_id\": \"${LOG_SPACE_ID}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "       \"password\" : \"${LOG_LOGGING_TOKEN}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "       \"inserted_keypairs\" : {" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "           \"stack_id\" : \"${BMIX_ORG}\"," >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "           \"instance_id\" : \"${BMIX_USER}\"" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "       }" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "   }" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    echo -e "}" >> $PIPELINE_LOG_CONF_DIR/multitenant.conf
-    cat $PIPELINE_LOG_CONF_DIR/multitenant.conf    
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not create multitenant.conf file, rc = $RC"
-        return 16
-    fi
+    echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
 
-    # Network coniguation files
-    echo -e "{" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "   # The network section covers network configuration" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "   # This file is generated from the /etc/init/mt-logstash-forwarder.conf" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "   # upstart script" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "   \"network\": {" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # A list of downstream servers listening for our messages." >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # logstash-forwarder will pick one at random and only switch if" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # the selected one appears to be dead or unresponsive" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       \"servers\": [ \"${BMIX_TARGET_PREFIX}.opvis.bluemix.net:9091\" ]," >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # Network timeout in seconds. This is most important for" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # logstash-forwarder determining whether to stop waiting for an" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # acknowledgement from the downstream server. If an timeout is reached," >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # logstash-forwarder will assume the connection or server is bad and" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       # will connect to a server chosen at random from the servers list." >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "       \"timeout\": 15" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "   }" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    echo -e "}" >> $PIPELINE_LOG_CONF_DIR/network.conf
-    cat $PIPELINE_LOG_CONF_DIR/network.conf    
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not create network.conf file, rc = $RC"
-        return 17
+    # set Multi-tenant coniguation file
+    if [ -e "$MULTITENANT_CONF_FILE" ]; then
+        rm -f "$MULTITENANT_CONF_FILE"
     fi
+    echo -e "{" >> $MULTITENANT_CONF_FILE
+    echo -e "   \"multitenant\": {" >> $MULTITENANT_CONF_FILE
+    echo -e "       \"tenant_id\": \"${LOG_SPACE_ID}\"," >> $MULTITENANT_CONF_FILE
+    echo -e "       \"password\" : \"${LOG_LOGGING_TOKEN}\"," >> $MULTITENANT_CONF_FILE
+    echo -e "       \"inserted_keypairs\" : {" >> $MULTITENANT_CONF_FILE
+    echo -e "           \"stack_id\" : \"${BMIX_ORG}\"," >> $MULTITENANT_CONF_FILE
+    echo -e "           \"instance_id\" : \"${BMIX_USER}\"" >> $MULTITENANT_CONF_FILE
+    echo -e "       }" >> $MULTITENANT_CONF_FILE
+    echo -e "   }" >> $MULTITENANT_CONF_FILE
+    echo -e "}" >> $MULTITENANT_CONF_FILE
 
-    # Run the application in the foreground - output goes to stdout 
-    # which the supervisord will redirect to a specified file.
-    
+    # set Network coniguation file
+    if [ -e "$NETWORK_CONF_FILE" ]; then
+        rm -f "$NETWORK_CONF_FILE"
+    fi
+    echo -e "{" >> $NETWORK_CONF_FILE
+    echo -e "   \"network\": {" >> $NETWORK_CONF_FILE
+    echo -e "       \"servers\": [ \"${BMIX_TARGET_PREFIX}\" ]," >> $NETWORK_CONF_FILE
+    echo -e "       \"timeout\": 15" >> $NETWORK_CONF_FILE
+    echo -e "   }" >> $NETWORK_CONF_FILE
+    echo -e "}" >> $NETWORK_CONF_FILE
+
+    # Run the mt-logstash-forwarder in the foreground
+    debugme echo "Run mt-logstash-forwarder service" 
     /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config ${EXT_DIR}/conf.d -spool-size 100 -quiet true 2> /dev/null &
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start mt-logstash-forwarder service, rc = $RC"
-        return 18
+        return 7
     fi
-
-    # restart forwarder to pick up the config changes
-#    debugme echo "Restart mt-logstash-forwarder service"
-#    sudo service mt-logstash-forwarder restart
-#    RC=$?
-#    if [ $RC -ne 0 ]; then
-#        debugme echo "Log init failed, could not restart mt-logstash-forwarder service, rc = $RC"
-#        return 19
-#    fi
     
     # flag logging enabled for other extensions to use
     debugme echo "Logging setup and enabled"
@@ -403,16 +346,18 @@ log_and_echo() {
             local timestamp=`date +"%F %T %Z"`
             L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
             echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"pipeline\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
+cat $PIPELINE_LOGGING_FILE
         else
+echo "Bahram1"
             # no logger file, send to syslog
             logger -t "pipeline" "$L_MSG"
         fi
     else
+echo "Bahram2"
         # no logger file, send to syslog
         logger -t "pipeline" "$L_MSG"
     fi
 }
-
 
 print_errors() {
     if [ -e "${ERROR_LOG_FILE}" ]; then
