@@ -433,4 +433,6 @@ export INFO_LEVEL
 export WARN_LEVEL
 export ERROR_LEVEL
 export OFF_LEVEL
+#the pipeline log file that will use to send the log info to Kibana
+export PIPELINE_LOGGING_FILE
 
