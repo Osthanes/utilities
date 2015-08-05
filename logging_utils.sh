@@ -346,7 +346,6 @@ log_and_echo() {
             local timestamp=`date +"%F %T %Z"`
             L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
             echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"pipeline\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
-cat $PIPELINE_LOGGING_FILE
         else
             # no logger file, send to syslog
             logger -t "pipeline" "$L_MSG"
