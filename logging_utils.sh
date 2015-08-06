@@ -132,7 +132,7 @@ setup_met_logging() {
     if [ -n "$BLUEMIX_TARGET" ]; then
         BMIX_TARGET=$BLUEMIX_TARGET
     else
-        local BLUEMIX_API_HOST=`echo cf api | awk '{print $3}' | sed '0,/.*\/\//s///'`
+        local BLUEMIX_API_HOST=$(echo $(cf api) | awk '{print $3}' | sed '0,/.*\/\//s///')
         echo $BLUEMIX_API_HOST | grep 'stage1'
         RC=$?
         if [ $RC -eq 0 ]; then
@@ -163,7 +163,7 @@ setup_met_logging() {
         return 5
     fi
     # get our necessary logging keys
-    debugme echo "Fetching logging keys for user: $BMIX_USER space: $BMIX_SPACE org: $BMIX_ORG "
+    debugme echo "Fetching logging keys for user: $BMIX_USER space: $BMIX_SPACE org: $BMIX_ORG target_api: $APT_TARGET_PREFIX"
     local curl_data="user=${BMIX_USER}&passwd=${BMIX_PWD}&space=${BMIX_SPACE}&organization=${BMIX_ORG}"
     curl -k --silent -d "$curl_data" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
     RC=$?
@@ -221,7 +221,7 @@ setup_met_logging() {
         rm -f "$PIPELINE_LOG_CONF_FILENAME"
     fi
     echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
-
+    debugme echo "logmet pipeline log coniguation file: $(cat $MULTITENANT_CONF_FILE)"
     # set Multi-tenant coniguation file
     if [ -e "$MULTITENANT_CONF_FILE" ]; then
         rm -f "$MULTITENANT_CONF_FILE"
@@ -236,7 +236,7 @@ setup_met_logging() {
     echo -e "       }" >> $MULTITENANT_CONF_FILE
     echo -e "   }" >> $MULTITENANT_CONF_FILE
     echo -e "}" >> $MULTITENANT_CONF_FILE
-
+    debugme echo "logmet multi-tenant coniguation file: $(cat $MULTITENANT_CONF_FILE)"
     # set Network coniguation file
     if [ -e "$NETWORK_CONF_FILE" ]; then
         rm -f "$NETWORK_CONF_FILE"
@@ -247,7 +247,7 @@ setup_met_logging() {
     echo -e "       \"timeout\": 15" >> $NETWORK_CONF_FILE
     echo -e "   }" >> $NETWORK_CONF_FILE
     echo -e "}" >> $NETWORK_CONF_FILE
-
+    debugme echo "logmet network coniguation file: $(cat $NETWORK_CONF_FILE)"
     # Run the mt-logstash-forwarder in the foreground
     debugme echo "Run mt-logstash-forwarder service" 
     /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config ${EXT_DIR}/conf.d -spool-size 100 -quiet true 2> /dev/null &
@@ -345,7 +345,7 @@ log_and_echo() {
         if [ -e $PIPELINE_LOGGING_FILE ]; then
             local timestamp=`date +"%F %T %Z"`
             L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
-            echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"pipeline\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
+            echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"pipeline-${MODULE_NAME}\", \"phase\": \"${IDS_PROJECT_NAME} | ${IDS_STAGE_NAME} | ${IDS_JOB_NAME}\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
         else
             # no logger file, send to syslog
             logger -t "pipeline" "$L_MSG"
