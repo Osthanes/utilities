@@ -221,7 +221,7 @@ setup_met_logging() {
         rm -f "$PIPELINE_LOG_CONF_FILENAME"
     fi
     echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
-    debugme echo "logmet pipeline log coniguation file: $(cat $MULTITENANT_CONF_FILE)"
+    debugme echo "logmet pipeline log coniguation file: $(cat $PIPELINE_LOG_CONF_FILENAME)"
     # set Multi-tenant coniguation file
     if [ -e "$MULTITENANT_CONF_FILE" ]; then
         rm -f "$MULTITENANT_CONF_FILE"
