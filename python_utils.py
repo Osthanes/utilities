@@ -483,8 +483,8 @@ def get_credentials_for_non_binding_service(service):
         result = json.loads(result)
         debug("JSON result: \n" + str(result))
 
-        # return the json as-is, let the caller pull the appropriate data out based on the contents (which may vary
-        # from one service broker to another)
+        # return the json as-is, let the caller pull the appropriate data out (which may vary from one service broker
+        # to another)
         return result
     else:
         LOGGER.error("No service key for service instance %s", service_name)
