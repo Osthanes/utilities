@@ -460,3 +460,53 @@ def get_credentials_from_bound_app (service, binding_app=None, plan=DEFAULT_SERV
         raise Exception("Unable to get bound credentials for access to the " + service + " service.")
 
     return None
+
+
+# retrieve the credentials for non-binding service brokers which (optionally) implement the service_keys endpoint
+def get_credentials_for_non_binding_service(service):
+    service_name = find_service_name_in_space(service)
+    if service_name is None:
+        LOGGER.error("No service '%s' found." % service)
+        return None
+
+    result = execute_cf_cmd("cf service-keys '%s'" % service_name)
+    # ignore the header and grab the first service key
+    result = result.splitlines()[2:3:]
+    debug("Raw filtered result: \n" + str(result))
+
+    if len(result) > 0:
+        result = execute_cf_cmd("cf service-key '%s' '%s'" % (service_name, result[0].strip()))
+        # extract out only the json portion of the command result
+        result = '\n'.join(result.split('\n')[1:-2])
+        debug("Raw filtered result: \n" + str(result))
+
+        result = json.loads(result)
+        debug("JSON result: \n" + str(result))
+
+        # return the json as-is, let the caller pull the appropriate data out based on the contents (which may vary
+        # from one service broker to another)
+        return result
+    else:
+        LOGGER.error("No service key for service instance %s", service_name)
+
+    return None
+
+
+def execute_cf_cmd(command):
+    proc = Popen([command], shell=True, stdout=PIPE, stderr=PIPE)
+    out, err = proc.communicate()
+
+    debug("Command: %s \n%s" % (command, out))
+
+    if proc.returncode != 0:
+        LOGGER.error("An error occurred running command '%s' " + out % command)
+        return None
+
+    return out
+
+
+def debug(message):
+    if DEBUG:
+        LOGGER.debug(message)
+
+
