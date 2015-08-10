@@ -394,15 +394,11 @@ login_using_bluemix_user_password(){
     if [ -z "$BLUEMIX_USER" ]; then 
         echo -e "${red} In order to login with ice login command, the Bluemix user id is required ${no_color}" | tee -a "$ERROR_LOG_FILE"
         echo -e "${red} Please set BLUEMIX_USER on environment ${no_color}" | tee -a "$ERROR_LOG_FILE"
-        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get BLUEMIX_USER ID. $(get_error_info)"
-        ${EXT_DIR}/print_help.sh
         return 1
     fi 
     if [ -z "$BLUEMIX_PASSWORD" ]; then 
         echo -e "${red} In order to login with ice login command, the Bluemix password is required ${no_color}" | tee -a "$ERROR_LOG_FILE"
         echo -e "${red} Please set BLUEMIX_PASSWORD as an environment property environment ${no_color}" | tee -a "$ERROR_LOG_FILE"
-        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get BLUEMIX_PASSWORD. $(get_error_info)"
-        ${EXT_DIR}/print_help.sh
         return 1
     fi 
     if [ -z "$BLUEMIX_ORG" ]; then 
@@ -452,8 +448,8 @@ login_to_container_service(){
     local RC=$?
     # check login result 
     if [ $RC -ne 0 ]; then
-        echo -e "${label_color}Failed to access to IBM Container Service using credentials passed from IBM DevOps Services. 'ice info' command failed with return code ${RC}. ${no_color}"
-        echo -e "${label_color}Trying to login with 'ice login' command using Bluemix userid and password and check again 'ice info' command. ${no_color}"
+        echo -e "${red}}Failed to access to IBM Container Service using credentials passed from IBM DevOps Services. 'ice info' command failed with return code ${RC}. ${no_color}"
+        echo -e "${red}}Trying to login with 'ice login' command using Bluemix userid and password and check again 'ice info' command. ${no_color}"
         if [ -n "$API_KEY" ]; then 
             echo -e "${label_color}Logging on with API_KEY${no_color}"
             ice_retry $ICE_ARGS login --key ${API_KEY} 2> /dev/null
