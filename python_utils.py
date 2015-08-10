@@ -345,6 +345,7 @@ def check_and_create_bridge_app ():
 
     return True
 
+
 # look for our bridge app to bind this service to.  If it's not there,
 # attempt to create it.  Then bind the service to that app under the 
 # given plan.  If it all works, return that app name as the bound app
@@ -353,23 +354,11 @@ def create_bound_app_for_service (service, plan=DEFAULT_SERVICE_PLAN):
     if not check_and_create_bridge_app():
         return None
 
-    # look to see if we have the service in our space
-    serviceName = find_service_name_in_space(service)
+    # get or create the service if necessary
+    serviceName = get_or_create_service(service, plan)
 
-    # if we don't have the service name, means the tile isn't created in our space, so go
-    # load it into our space if possible
-    if serviceName == None:
-        LOGGER.info("Service \"" + service + "\" is not loaded in this space, attempting to load it")
-        serviceName = service
-        command = "cf create-service \"" + service + "\" \"" + plan + "\" \"" + serviceName + "\""
-        LOGGER.debug("Executing command \"" + command + "\"")
-        proc = Popen([command], 
-                     shell=True, stdout=PIPE, stderr=PIPE)
-        out, err = proc.communicate();
-
-        if proc.returncode != 0:
-            LOGGER.info("Unable to create service in this space, error was: " + out)
-            return None
+    if serviceName is None:
+        return None
 
     # now try to bind the service to our bridge app
     LOGGER.info("Binding service \"" + serviceName + "\" to app \"" + DEFAULT_BRIDGEAPP_NAME + "\"")
@@ -382,6 +371,29 @@ def create_bound_app_for_service (service, plan=DEFAULT_SERVICE_PLAN):
         return None
 
     return DEFAULT_BRIDGEAPP_NAME
+
+
+# return the service name for the service, if the service doesn't exist, create it.
+def get_or_create_service(service, plan=DEFAULT_SERVICE_PLAN):
+    serviceName = find_service_name_in_space(service)
+
+    # if we don't have the service name, means the tile isn't created in our space, so go
+    # load it into our space if possible
+    if serviceName == None:
+        LOGGER.info("Service \"" + service + "\" is not loaded in this space, attempting to load it")
+        serviceName = service
+        command = "cf create-service \"" + service + "\" \"" + plan + "\" \"" + serviceName + "\""
+        LOGGER.debug("Executing command \"" + command + "\"")
+        proc = Popen([command],
+                     shell=True, stdout=PIPE, stderr=PIPE)
+        out, err = proc.communicate();
+
+        if proc.returncode != 0:
+            LOGGER.info("Unable to create service in this space, error was: " + out)
+            return None
+
+    return serviceName
+
 
 # find given bound app, and look for the passed bound service in cf.  once
 # found in VCAP_SERVICES, look for the credentials setting, and return the
@@ -463,10 +475,11 @@ def get_credentials_from_bound_app (service, binding_app=None, plan=DEFAULT_SERV
 
 
 # retrieve the credentials for non-binding service brokers which (optionally) implement the service_keys endpoint
-def get_credentials_for_non_binding_service(service):
-    service_name = find_service_name_in_space(service)
+def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN):
+
+    # get or create the service if necessary
+    service_name = get_or_create_service(service, plan)
     if service_name is None:
-        LOGGER.error("No service '%s' found." % service)
         return None
 
     result = execute_cf_cmd("cf service-keys '%s'" % service_name)
@@ -496,7 +509,7 @@ def execute_cf_cmd(command):
     proc = Popen([command], shell=True, stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
 
-    debug("Command: %s \n%s" % (command, out))
+    debug("Executing command \"%s\" \n%s" % (command, out))
 
     if proc.returncode != 0:
         LOGGER.error("An error occurred running command '%s' " + out % command)
