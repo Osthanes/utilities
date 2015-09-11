@@ -35,7 +35,7 @@ RC_NOTIFY_LEVEL_USAGE=13
 RC_NO_TOKEN_DEFINED=14
 RC_BAD_USAGE=254
 
-# return code variables
+# Return code variables
 slack_ret_value=0
 hip_chat_ret_value=0
 send_msg_ret_value=0
@@ -69,7 +69,7 @@ Usage: [-d] [-l notification_level] -m notification_message
        [-h]
 
 Options:
-  -m    (required) Use notification massage for user input.  May container URLs using slack notification format <url|name>.  
+  -m    (required) Use notification message for user input.  May container URLs using slack notification format <url|name>.  
         For example: sendMessage.sh -l good -m 'Got 200 response from <http://www.google.com|google> and <http://www.yahoo.com|yahoo>.  Search is alive and well' 
   -l    (recommended) Use notification level for user input. You can set the notification level using the NOTIFICATION_LEVEL environment variable.
         Valid values are 'good', 'info', and 'bad'. 
@@ -77,45 +77,45 @@ Options:
   -d    (optional) Debug information  
 
 Notes:
-The following environment varaiables should be specify before you call this script
+The following environment variables should be specified before you call this script
   Slack Notification:
       SLACK_WEBHOOK_PATH: Specify the Slack Webhook URL
         In order to send Slack notification you must specify the Slack Webhook URL
         in an environment variable called 'SLACK_WEBHOOK_PATH' like this:
           SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
-        You can use or create a new Slack Webhook URL using the following steps:
-          1. Go to Slack Integration page of your project (https://yourproject.slack.com/services).
-          2. Find the Incoming WebHooks and Click on 'Configured'.
+        You can use or create a new Slack Webhook URL by using the following steps:
+          1. Go to the Slack Integration page of your project (https://yourproject.slack.com/services).
+          2. Find the Incoming WebHooks section and click 'Configured'.
           3. You can add new Webhook URL or select existing one.
       SLACK_COLOR: Specify the color of the border along the left side of the message. 
         It is an optional environment variable.
-        The value can either be one of 'good', 'warning', 'danger', or any hex color code (eg. #439FE0).
-        If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
+        The value can be 'good', 'warning', 'danger', or any hex color code (eg. #439FE0).
+        If you set this optional environment, then you don't need to set '-l notification_level' option when you call this script.
 
   HipChat Notification:
       HIP_CHAT_TOKEN: Specify the HipChat token
         In order to send HipChat notification you must specify the HipChat token
         in an environment variable called 'HIP_CHAT_TOKEN':
           HIP_CHAT_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXX
-        You can use or create a new HipChat token using the following steps:
+        You can use or create a new HipChat token by using the following steps:
           1. Go to your HipChat account page of your project (https://yourproject.hipchat.com/account/api).
           2. Create a new token or use existing one."
       HIP_CHAT_ROOM_NAME: Specify the name of the HipChat room.
       HIP_CHAT_COLOR: Specify the color of the border along the left side of the message and background color.
         It is an optional environment variable.
         The value can either be one of 'yellow', 'red', 'green', 'purple', 'gray', or 'random'.
-        If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
+        If you set this optional environment, then you don't need to set '-l notification_level' option when you call this script.
 
   NOTIFICATION_COLOR: Specify the color of the border along the left side of the message and background color.
-    It is an optional environment variable and it apply to both Slack and HipChat color.  
-    The value can either be one of 'good', 'danger', or 'info'.
+    It is an optional environment variable and it applies to both the Slack and HipChat color.  
+    The value can be 'good', 'danger', or 'info'.
     If user specify SLACK_COLOR, HIP_CHAT_COLOR and NOTIFICATION_COLOR, then SLACK_COLOR and HIP_CHAT_COLOR will be used for the notification color.
-    If you set this optional environment, then, you don't need to set '-l notification_level' option when you call this script.
+    If you set this optional environment, then you don't need to set '-l notification_level' option when you call this script.
 
   NOTIFICATION_FILTER: Specify the notification message filter level.
     It is an optional environment variable.
-    The value can either be one of 'good', 'info', and 'bad'.
-    The table below show with 'X" when the notification message will be send based on setting notify level and NOTIFICATION_FILTER.
+    The value can be 'good', 'info', and 'bad'.
+    The table below show with 'X" when the notification message will be sent based on setting notification_level and NOTIFICATION_FILTER.
     |--------------------|--------------------------------------|
     |                    |         NOTIFICATION_FILTER          |
     | notification_level |---------|---------|--------|---------|
@@ -140,32 +140,32 @@ EOF
 #############################################################################
 msgid_12()
 {
-    echo -e "${red}Notification massage must be used when invoking this script.${no_color}"
+    echo -e "${red}Notification message must be used when invoking this script.${no_color}"
 }
 
 msgid_13()
 {
-    echo -e "${red}Notification massage must be used with the -l notification_level option when invoking this script.${no_color}."
+    echo -e "${red}Notification message must be used with the -l notification_level option when invoking this script.${no_color}."
 }
 
 msgid_14()
 {
-    echo -e "${label_color}To send notifications, please set SLACK_WEBHOOK_PATH or HIP_CHAT_TOKEN in the environment${no_color}"
+    echo -e "${label_color}To send notifications, set SLACK_WEBHOOK_PATH or HIP_CHAT_TOKEN in the environment${no_color}"
     if [[ $DEBUG = 1 ]]; then 
-        echo -e "In order to send Slack notification you must specify the Slack Webhook URL"
+        echo -e "To send Slack notifications, you must specify the Slack Webhook URL"
         echo -e "in an environment variable called 'SLACK_WEBHOOK_PATH' like this:"
         echo -e "export SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
-        echo -e "You can use or create a new Slack Webhook URL using the following steps:"
-        echo -e "   1. Go to Slack Integration page of your project (https://yourproject.slack.com/services) "
-        echo -e "   2. Find the Incoming WebHooks and Click on 'Configured'"
-        echo -e "   3. You can add new Webhook URL or select existing one."
+        echo -e "You can use or create a Slack Webhook URL by using the following steps:"
+        echo -e "   1. Go to Slack Integration page for your project (https://yourproject.slack.com/services) "
+        echo -e "   2. Find the Incoming WebHooks section and click 'Configured'"
+        echo -e "   3. You can add a Webhook URL or select an existing one."
         echo
-        echo -e "In order to send HipChat notification you must specify the HipChat token"
+        echo -e "To send HipChat notifications, you must specify the HipChat token"
         echo -e "in an environment variable called 'HIP_CHAT_TOKEN' like this:"
         echo -e "export $HIP_CHAT_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXX"
-        echo -e "You can use or create a new Slack Webhook URL using the following steps:"
-        echo -e "   1. Go to your HipChat account page of your project (https://yourproject.hipchat.com/account/api)"
-        echo -e "   2. Create a new token or use existing one."
+        echo -e "You can use or create a HipChat token by using the following steps:"
+        echo -e "   1. Go to the HipChat account page of your project (https://yourproject.hipchat.com/account/api)"
+        echo -e "   2. Create a token or use existing one."
     fi 
 }
 
@@ -212,7 +212,7 @@ sendSlackNotify()
         debugme echo -e "Sender for this notification message is not defined"
     fi 
 
-    debugme echo -e "Sending slack notification message:  '${MSG}'"
+    debugme echo -e "Sending Slack notification message:  '${MSG}'"
 
     local PAYLOAD="{\"attachments\":[{""\"text\": \"$MSG\", \"color\": \"$COLOR\"}]}"
     debugme echo -e "Slack Payload: ${PAYLOAD}"
@@ -224,13 +224,13 @@ sendSlackNotify()
             echo -e "${green}Slack notification message has been sent succesfully.${no_color}"
             ret_value=0
         elif [ "$RESPONSE" -eq 404 ]; then
-            echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE} 'Bad Slack Webhook URL token').${no_color}"
+            echo -e "${red}Slack notification message failed with (Response code = ${RESPONSE} 'Bad Slack Webhook URL token').${no_color}"
             ret_value=$RESPONSE
         elif [ "$RESPONSE" -eq 500 ]; then
-            echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE} 'Salck Payload was not valid').${no_color}"
+            echo -e "${red}Slack notification message failed with (Response code = ${RESPONSE} 'Slack Payload was not valid').${no_color}"
             ret_value=$RESPONSE
         else
-            echo -e "${red}Slack notification message has been failed with (Response code = ${RESPONSE}).${no_color}"
+            echo -e "${red}Slack notification message failed with (Response code = ${RESPONSE}).${no_color}"
             ret_value=$RESPONSE
         fi
     else
@@ -260,7 +260,7 @@ sendHipChatNotify()
 
     # Validate the COLOR
     if [ -z "$COLOR" ]; then
-        debugme echo -e "HipChat color is not defined. setting to 'gray' color"
+        debugme echo -e "HipChat color is not defined. Setting to 'gray' color"
         COLOR="${HIP_CHAT_COLOR_GRAY}"
     elif [ "${COLOR}" == "${HIP_CHAT_COLOR_GREEN}" ] || \
          [ "${COLOR}" == "${HIP_CHAT_COLOR_RED}" ] || \
@@ -270,7 +270,7 @@ sendHipChatNotify()
          [ "${COLOR}" == "${HIP_CHAT_COLOR_RANDOM}" ]; then
         debugme echo -e "Valid HipChat color: ${COLOR}"
     else
-        debugme echo -e "Invalid HipChat color ${COLOR}. setting to 'gray' color"
+        debugme echo -e "Invalid HipChat color ${COLOR}. Setting to 'gray' color"
         COLOR="${HIP_CHAT_COLOR_GRAY}"
     fi
 
@@ -294,7 +294,7 @@ sendHipChatNotify()
         if [ "$RESPONSE" -eq 200 ]; then
             debugme echo -e "${green}Valid HipChat token.${no_color}"
         else
-            echo -e "${red}Validation of HipChat token has been failed with (Response code = ${RESPONSE}).${no_color}"
+            echo -e "${red}Validation of HipChat token failed with (Response code = ${RESPONSE}).${no_color}"
             ret_value=$RESPONSE
         fi
          # replace message 
@@ -322,19 +322,19 @@ sendHipChatNotify()
         RESULT=$?
         if [ "$RESULT" -eq 0 ]; then
             if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 204 ]; then
-                echo -e "${green}HipChat notification message has been sent succesfully.${no_color}"
+                echo -e "${green}HipChat notification message sent succesfully.${no_color}"
                 ret_value=0
             elif [ "$RESPONSE" -eq 401 ]; then
-                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'Bad HipChat token').${no_color}"
+                echo -e "${red}HipChat notification message failed with (Response code = ${RESPONSE} 'Bad HipChat token').${no_color}"
                 ret_value=$RESPONSE
             elif [ "$RESPONSE" -eq 400 ]; then
-                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat Payload was not valid').${no_color}"
+                echo -e "${red}HipChat notification message failed with (Response code = ${RESPONSE} 'HipChat Payload was not valid').${no_color}"
                 ret_value=$RESPONSE
             elif [ "$RESPONSE" -eq 404 ]; then
-                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE} 'HipChat room not found').${no_color}"
+                echo -e "${red}HipChat notification message failed with (Response code = ${RESPONSE} 'HipChat room not found').${no_color}"
                 ret_value=$RESPONSE
             else
-                echo -e "${red}HipChat notification message has been failed with (Response code = ${RESPONSE}).${no_color}"
+                echo -e "${red}HipChat notification message failed with (Response code = ${RESPONSE}).${no_color}"
                 ret_value=$RESPONSE
             fi
         else
