@@ -358,22 +358,22 @@ setup_dra(){
                         return 0
                     else
                         log_and_echo "$WARN" "Failed to add DRA criterial file ${CRITERIAL_FILE} with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
-                        return 1
+                        return 2
                     fi
                 else
                     log_and_echo "$WARN" "DRA is not enabled with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
-                    return 1
+                    return 2
                 fi
             else
                 log_and_echo "$WARN" "Failed to init DRA with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
-                return 1
+                return 2
             fi 
         else
-            log_and_echo "$WARN" "Failed to get DRA project key with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
+            debugme echo -e "Failed to get DRA project key with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
             return 1
         fi
     else
-        log_and_echo "$WARN" "Failed to setup grunt_idra with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
+        debugme echo -e "Failed to setup grunt_idra with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
         return 1
     fi
 }
