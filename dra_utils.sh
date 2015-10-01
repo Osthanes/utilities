@@ -62,14 +62,14 @@ get_dra_prject_key() {
             debugme echo -e "Successfully get the project key ${DRA_PROJECT_KEY}"
         else
             debugme echo -e "Failed to get project key"
-            return 2
+            return 1
         fi
         rm -f "$RESPONCE_FILE"
     else
         rm -f "$RESPONCE_FILE"
         # unable to curl DRA project key, fail out
         debugme echo -e "get DRA project key failed, could not get DRA project key, rc = $RC"
-        return 2
+        return 1
     fi
     return 0
 }
@@ -105,15 +105,14 @@ add_criterial_rule_to_dra() {
             echo $RESPONSE | grep "Invalid"
             RC=$?
             if [ $RC -eq 0 ]; then
-                return 3
+                return 1
             else
                 debugme echo -e "Successfully sent the criterial rules file $CRITERIAL_FILE to DRA"
-                return 0
            fi
         fi
     else
         debugme echo -e "Failed to send criterial rule file $CRITERIAL_FILE to DRA."
-        return 2
+        return 1
     fi
     return 0
 }
@@ -149,15 +148,14 @@ add_result_rule_to_dra() {
             echo $RESPONSE | grep "Invalid"
             RC=$?
             if [ $RC -eq 0 ]; then
-                return 3
+                return 1
             else
                 debugme echo -e "Successfully sent the result rule file $CRITERIAL_FILE to DRA."
-                return 0
            fi
         fi
     else
         debugme echo -e "Failed to send result file $CRITERIAL_FILE to DRA."
-        return 2
+        return 1
     fi
     return 0
 }
@@ -206,11 +204,6 @@ init_dra() {
         return 1
     fi 
 
-    if [ -z "$RESPONSE" ]; then
-        debugme echo -e "Failed to init_dra. init DRA return empty response"
-        return 1
-    fi 
-
     if [ -n "$RESPONSE" ]; then
         echo $RESPONSE | grep "successfully"
         RC=$?
@@ -219,6 +212,9 @@ init_dra() {
         else
             return 1
        fi
+    else
+        debugme echo -e "Failed to init_dra. init DRA return empty response"
+        return 1        
     fi
 }
 
@@ -233,10 +229,6 @@ check_dra_enabled() {
         debugme echo -e "Failed to setup_grunt_idra. Check for isDRAEnabled return error code ${RC}"
         return 1
     fi 
-    if [ -z "$RESPONSE" ]; then
-        debugme echo -e "Failed to setup_grunt_idra. Check for isDRAEnabled return empty response"
-        return 1
-    fi 
 
     if [ -n "$RESPONSE" ]; then
         local ENABLED_RESPONSE=$(echo $RESPONSE | grep "enabled" | awk '{print $6}' | sed 's/.*"enabled"://' | sed 's/}//g')
@@ -248,7 +240,11 @@ check_dra_enabled() {
             debugme echo -e "The DRA is not enabled"
             return 1
        fi
-    fi
+    else
+        debugme echo -e "Failed to setup_grunt_idra. Check for isDRAEnabled return empty response"
+        return 1
+    fi 
+
 }
 
 ###############################
@@ -327,7 +323,7 @@ set_event_type(){
     local RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo -e "Failed to set event type ${EVENT_TYPE} with return error code ${RC}"
-        return 2
+        return 1
     fi 
     return 0
 }
