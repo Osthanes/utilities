@@ -370,7 +370,7 @@ setup_dra(){
                         log_and_echo "$WARN" "Failed to add DRA criterial file ${CRITERIAL_FILE} with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
                         return 2
                     fi
-                else
+                else 
                     debugme "$WARN" "DRA is not enabled with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
                     return 1
                 fi
