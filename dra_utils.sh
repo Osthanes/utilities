@@ -48,9 +48,9 @@ get_dra_prject_key() {
 
     # get project key
     local DRA_URL="http://da.oneibmcloud.com/api/v1/project"
-    debugme echo "Fetching DRA project key for $IDS_PROJECT_NAME IDS project" 
+    debugme echo -e "Fetching DRA project key for $IDS_PROJECT_NAME IDS project" 
     debugme cat "$PROJECT_FILE"
-    debugme echo "curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL"
+    debugme echo -e "curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL"
     curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL > "$RESPONCE_FILE"
     local RC=$?
     debugme cat "$RESPONCE_FILE"
@@ -59,16 +59,16 @@ get_dra_prject_key() {
         local PROJECT_KEY_INFO=$(cat "$RESPONCE_FILE")
         export DRA_PROJECT_KEY=$(echo $PROJECT_KEY_INFO | sed 's/.*"projectkey":"//' | sed 's/"}]//g')
         if [ -n "$DRA_PROJECT_KEY" ]; then
-            debugme echo "Successfully get the project key ${DRA_PROJECT_KEY}"
+            debugme echo -e "Successfully get the project key ${DRA_PROJECT_KEY}"
         else
-            debugme echo "Failed to get project key"
+            debugme echo -e "Failed to get project key"
             return 2
         fi
         rm -f "$RESPONCE_FILE"
     else
         rm -f "$RESPONCE_FILE"
         # unable to curl DRA project key, fail out
-        debugme echo "get DRA project key failed, could not get DRA project key, rc = $RC"
+        debugme echo -e "get DRA project key failed, could not get DRA project key, rc = $RC"
         return 2
     fi
     return 0
@@ -92,9 +92,9 @@ add_criterial_rule_to_dra() {
         rm -f "$RESPONCE_FILE"
     fi
     local DRA_ADD_CRITERIAL_URL="http://da.oneibmcloud.com/api/v1/criteria"
-    debugme echo "Fetching criterial rules to DRA for $CRITERIAL_FILE."
-    debugme echo "$(cat $CRITERIAL_FILE)"
-    debugme echo "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL"
+    debugme echo -e "Fetching criterial rules to DRA for $CRITERIAL_FILE."
+    debugme echo -e "$(cat $CRITERIAL_FILE)"
+    debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL"
     curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL > "$RESPONCE_FILE"
     local RC=$?
     debugme cat "$RESPONCE_FILE"
@@ -107,12 +107,12 @@ add_criterial_rule_to_dra() {
             if [ $RC -eq 0 ]; then
                 return 3
             else
-                debugme echo "Successfully sent the criterial rules file $CRITERIAL_FILE to DRA"
+                debugme echo -e "Successfully sent the criterial rules file $CRITERIAL_FILE to DRA"
                 return 0
            fi
         fi
     else
-        debugme echo "Failed to send criterial rule file $CRITERIAL_FILE to DRA."
+        debugme echo -e "Failed to send criterial rule file $CRITERIAL_FILE to DRA."
         return 2
     fi
     return 0
@@ -136,9 +136,9 @@ add_result_rule_to_dra() {
         rm -f "$RESPONCE_FILE"
     fi
     local DRA_URL="http://da.oneibmcloud.com/api/v1/event"
-    debugme echo "Fetching result rules to DRA for $RULE_FILE."
-    debugme echo "$(cat $RULE_FILE)"
-    debugme echo "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL"
+    debugme echo -e "Fetching result rules to DRA for $RULE_FILE."
+    debugme echo -e "$(cat $RULE_FILE)"
+    debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL"
     curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL > "$RESPONCE_FILE"
     local RC=$?
     debugme cat "$RESPONCE_FILE"
@@ -151,12 +151,12 @@ add_result_rule_to_dra() {
             if [ $RC -eq 0 ]; then
                 return 3
             else
-                debugme echo "Successfully sent the result rule file $CRITERIAL_FILE to DRA."
+                debugme echo -e "Successfully sent the result rule file $CRITERIAL_FILE to DRA."
                 return 0
            fi
         fi
     else
-        debugme echo "Failed to send result file $CRITERIAL_FILE to DRA."
+        debugme echo -e "Failed to send result file $CRITERIAL_FILE to DRA."
         return 2
     fi
     return 0
@@ -166,26 +166,26 @@ add_result_rule_to_dra() {
 # Setup grunt idra            #
 ###############################
 setup_grunt_idra() {
-    debugme echo "npm install -g grunt"
+    debugme echo -e "npm install -g grunt"
     npm install -g grunt &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_grunt_idra. Could not install grunt"
+        debugme echo -e "Failed to setup_grunt_idra. Could not install grunt"
         return 1
     fi 
 
-    debugme echo "npm install -g grunt-cli"
+    debugme echo -e "npm install -g grunt-cli"
     npm install -g grunt-cli &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_grunt_idra. Could not install grunt-cli"
+        debugme echo -e "Failed to setup_grunt_idra. Could not install grunt-cli"
         return 1
     fi 
 
     npm install grunt-idra &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_grunt_idra. Could not install node grunt-idra"
+        debugme echo -e "Failed to setup_grunt_idra. Could not install node grunt-idra"
         return 1
     fi 
 
@@ -197,17 +197,17 @@ setup_grunt_idra() {
 ###############################
 init_dra() {
     # check -isDRAEnabled
-    debugme echo "grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY"
+    debugme echo -e "grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY"
     local RESPONSE="$(grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY)"
     local RC=$?
     debugme "$RESPONSE"
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to init_dra. init DRA return error code ${RESULT}"
+        debugme echo -e "Failed to init_dra. init DRA return error code ${RESULT}"
         return 1
     fi 
 
     if [ -z "$RESPONSE" ]; then
-        debugme echo "Failed to init_dra. init DRA return empty response"
+        debugme echo -e "Failed to init_dra. init DRA return empty response"
         return 1
     fi 
 
@@ -230,22 +230,22 @@ check_dra_enabled() {
     local RESPONSE="$(grunt --gruntfile=node_modules/grunt-idra/idra.js -isDRAEnabled)"
     local RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_grunt_idra. Check for isDRAEnabled return error code ${RC}"
+        debugme echo -e "Failed to setup_grunt_idra. Check for isDRAEnabled return error code ${RC}"
         return 1
     fi 
     if [ -z "$RESPONSE" ]; then
-        debugme echo "Failed to setup_grunt_idra. Check for isDRAEnabled return empty response"
+        debugme echo -e "Failed to setup_grunt_idra. Check for isDRAEnabled return empty response"
         return 1
     fi 
 
     if [ -n "$RESPONSE" ]; then
         local ENABLED_RESPONSE=$(echo $RESPONSE | grep "enabled" | awk '{print $6}' | sed 's/.*"enabled"://' | sed 's/}//g')
         if [ "$ENABLED_RESPONSE" == "true" ]; then
-            debugme echo "The DRA is enabled"
+            debugme echo -e "The DRA is enabled"
             return 0
         else
-            debugme echo "$RESPONSE"
-            debugme echo "The DRA is not enabled"
+            debugme echo -e "$RESPONSE"
+            debugme echo -e "The DRA is not enabled"
             return 1
        fi
     fi
@@ -259,7 +259,7 @@ setup_dra_build(){
     setup_grunt_idra
     local RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_dra_build. setup_grunt_idra return error code ${RC}"
+        debugme echo -e "Failed to setup_dra_build. setup_grunt_idra return error code ${RC}"
         return 1
     fi 
 
@@ -267,7 +267,7 @@ setup_dra_build(){
     grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_grunt_idra. init dra key return error code ${RC}"
+        debugme echo -e "Failed to setup_grunt_idra. init dra key return error code ${RC}"
         return 1
     fi 
 
@@ -275,7 +275,7 @@ setup_dra_build(){
     check_dra_enabled
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_dra_build. check_dra_enabled return error code ${RC}"
+        debugme echo -e "Failed to setup_dra_build. check_dra_enabled return error code ${RC}"
         return 1
     fi 
     return 0
@@ -296,7 +296,7 @@ setup_dra_deploy(){
     setup_grunt_idra
     local RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to setup_dra_deploy. setup_grunt_idra return error code ${RC}"
+        debugme echo -e "Failed to setup_dra_deploy. setup_grunt_idra return error code ${RC}"
         return 1
     fi 
 
@@ -304,7 +304,7 @@ setup_dra_deploy(){
     grunt --gruntfile=node_modules/grunt-idra/idra.js -decision=$CRITERIA_NAME
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to check_dra_enabled. check_dra_enabled return error code ${RC}"
+        debugme echo -e "Failed to check_dra_enabled. check_dra_enabled return error code ${RC}"
         return 1
     fi 
     return 0
@@ -326,7 +326,7 @@ set_event_type(){
     grunt --gruntfile=node_modules/grunt-idra/idra.js -eventType=$EVENT_TYPE
     local RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Failed to set event type ${EVENT_TYPE} with return error code ${RC}"
+        debugme echo -e "Failed to set event type ${EVENT_TYPE} with return error code ${RC}"
         return 2
     fi 
     return 0
