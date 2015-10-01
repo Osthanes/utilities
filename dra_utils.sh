@@ -49,14 +49,21 @@ get_dra_prject_key() {
     # get project key
     local DRA_URL="http://da.oneibmcloud.com/api/v1/project"
     debugme echo "Fetching DRA project key for $IDS_PROJECT_NAME IDS project" 
-    debugme echo "curl -k --silent -H "Content-Type: application/json" -X POST -d @project.json $DRA_URL"
-    curl -k --silent -H "Content-Type: application/json" -X POST -d @project.json $DRA_URL > "$RESPONCE_FILE"
+    debugme cat "$PROJECT_FILE"
+    debugme echo "curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL"
+    curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL > "$RESPONCE_FILE"
     local RC=$?
     debugme cat "$RESPONCE_FILE"
     rm -f "$PROJECT_FILE"
     if [ $RC == 0 ]; then
         local PROJECT_KEY_INFO=$(cat "$RESPONCE_FILE")
         export DRA_PROJECT_KEY=$(echo $PROJECT_KEY_INFO | sed 's/.*"projectkey":"//' | sed 's/"}]//g')
+        if [ -n "$DRA_PROJECT_KEY" ]; then
+            debugme echo "Successfully get the project key '${DRA_PROJECT_KEY}"
+        else
+            debugme echo "Failed to get project key"
+            return 2
+        fi
         rm -f "$RESPONCE_FILE"
     else
         rm -f "$RESPONCE_FILE"
@@ -190,12 +197,15 @@ setup_grunt_idra() {
 ###############################
 init_dra() {
     # check -isDRAEnabled
+    debugme echo "grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY"
     local RESPONSE="$(grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY)"
     local RC=$?
+    debugme "$RESPONSE"
     if [ $RC -ne 0 ]; then
         debugme echo "Failed to init_dra. init DRA return error code ${RESULT}"
         return 1
     fi 
+
     if [ -z "$RESPONSE" ]; then
         debugme echo "Failed to init_dra. init DRA return empty response"
         return 1
@@ -361,12 +371,12 @@ setup_dra(){
                         return 2
                     fi
                 else
-                    log_and_echo "$WARN" "DRA is not enabled with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
-                    return 2
+                    debugme "$WARN" "DRA is not enabled with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
+                    return 1
                 fi
             else
-                log_and_echo "$WARN" "Failed to init DRA with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
-                return 2
+                debugme "$WARN" "Failed to init DRA with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
+                return 1
             fi 
         else
             debugme echo -e "Failed to get DRA project key with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
