@@ -55,7 +55,7 @@ get_dra_prject_key() {
     local RC=$?
     debugme cat "$RESPONCE_FILE"
     rm -f "$PROJECT_FILE"
-    if [ $RC == 0 ] && [ $(grep -ci "projectkey" "$PROJECT_KEY_INFO") -ne 0 ]; then
+    if [ $RC == 0 ] && [ $(grep -ci "projectkey" "$RESPONCE_FILE") -ne 0 ]; then
         local PROJECT_KEY_INFO=$(cat "$RESPONCE_FILE")
         export DRA_PROJECT_KEY=$(echo $PROJECT_KEY_INFO | sed 's/.*"projectkey":"//' | sed 's/"}]//g')
         if [ -n "$DRA_PROJECT_KEY" ]; then
