@@ -49,11 +49,11 @@ get_dra_prject_key() {
     # get project key
     local DRA_URL="http://da.oneibmcloud.com/api/v1/project"
     debugme echo -e "Fetching DRA project key for $IDS_PROJECT_NAME IDS project" 
-    debugme cat "$PROJECT_FILE"
+    debugme echo -e $(cat "$PROJECT_FILE")
     debugme echo -e "curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL"
     curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL > "$RESPONCE_FILE"
     local RC=$?
-    debugme cat "$RESPONCE_FILE"
+    debugme echo -e $(cat "$RESPONCE_FILE")
     rm -f "$PROJECT_FILE"
     if [ $RC == 0 ] && [ $(grep -ci "projectkey" "$RESPONCE_FILE") -ne 0 ]; then
         local PROJECT_KEY_INFO=$(cat "$RESPONCE_FILE")
@@ -97,7 +97,7 @@ add_criterial_rule_to_dra() {
     debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL"
     curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL > "$RESPONCE_FILE"
     local RC=$?
-    debugme cat "$RESPONCE_FILE"
+    debugme echo -e $(cat "$RESPONCE_FILE")
     echo ""
     if [ $RC == 0 ]; then
         local RESPONCE=$(cat "$RESPONCE_FILE")
@@ -140,7 +140,7 @@ add_result_rule_to_dra() {
     debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL"
     curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL > "$RESPONCE_FILE"
     local RC=$?
-    debugme cat "$RESPONCE_FILE"
+    debugme echo -e $(cat "$RESPONCE_FILE")
     echo ""
     if [ $RC == 0 ]; then
         local RESPONCE=$(cat "$RESPONCE_FILE")
@@ -198,7 +198,7 @@ init_dra() {
     debugme echo -e "grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY"
     local RESPONSE="$(grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY)"
     local RC=$?
-    debugme "$RESPONSE"
+    debugme echo -e "$RESPONSE"
     if [ $RC -ne 0 ]; then
         debugme echo -e "Failed to init_dra. init DRA return error code ${RESULT}"
         return 1
@@ -367,11 +367,11 @@ setup_dra(){
                         return 2
                     fi
                 else 
-                    debugme "$WARN" "DRA is not enabled with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
+                    debugme echo -e "$WARN" "DRA is not enabled with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
                     return 1
                 fi
             else
-                debugme "$WARN" "Failed to init DRA with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
+                debugme echo -e "$WARN" "Failed to init DRA with return error code ${RESULT}. Could not Add Dynamic Risk Analytics."
                 return 1
             fi 
         else
@@ -395,4 +395,5 @@ export -f set_event_type
 export -f setup_dra
 
 export DRA_PROJECT_KEY
+export DRA_ENABLED
 
