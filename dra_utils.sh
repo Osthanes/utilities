@@ -297,7 +297,7 @@ setup_dra_deploy(){
     fi 
 
     # set the decision criteria name
-    dra_grunt_cmd \"decision=${CRITERIAL_NAME}\"
+    dra_grunt_cmd "decision=${CRITERIAL_NAME}"
     if [ $RC -ne 0 ]; then
         debugme echo -e "Failed to execute decision for criterial ${CRITERIAL_NAME} with return error code ${RC}."
         return 1
