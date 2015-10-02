@@ -260,10 +260,10 @@ setup_dra_build(){
     fi 
 
     # run grunt-idra -init
-    grunt --gruntfile=node_modules/grunt-idra/idra.js -init=$DRA_PROJECT_KEY
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo -e "Failed to setup_grunt_idra. init dra key return error code ${RC}"
+    init_dra
+    RESULT=$?
+    if [ $RESULT -ne 0 ]; then
+        debugme echo -e "$WARN" "Failed to init DRA with return error code ${RESULT}."
         return 1
     fi 
 
@@ -297,32 +297,33 @@ setup_dra_deploy(){
     fi 
 
     # set the decision criteria name
-    grunt --gruntfile=node_modules/grunt-idra/idra.js -decision=$CRITERIA_NAME
-    RC=$?
+    dra_grunt_cmd \"decision=${CRITERIAL_NAME}\"
     if [ $RC -ne 0 ]; then
-        debugme echo -e "Failed to check_dra_enabled. check_dra_enabled return error code ${RC}"
+        debugme echo -e "Failed to execute decision for criterial ${CRITERIAL_NAME} with return error code ${RC}."
         return 1
-    fi 
+    fi
+
     return 0
 }
 
 ###############################
-# Set Event Type to DRA       #
+# run DRA grunt command       #
 ###############################
-set_event_type(){
-    local EVENT_TYPE=$1
-    if [ -n "${EVENT_TYPE}" ]; then
-        debugme echo -e "EVENT_TYPE is '${EVENT_TYPE}'"
+dra_grunt_cmd(){
+    local CMD=$1
+    if [ -n "${CMD}" ]; then
+        debugme echo -e "dra_grunt_cmd is '${CMD}'"
     else
-        debugme echo -e "EVENT_TYPE is missing."
+        debugme echo -e "dra_grunt_cmd failed. input CMD is missing."
         return 1
     fi 
 
-    # set the decision criteria name
-    grunt --gruntfile=node_modules/grunt-idra/idra.js -eventType=$EVENT_TYPE
-    local RC=$?
+    # call grunt command
+    debugme echo -e "grunt CMD: grunt --gruntfile=node_modules/grunt-idra/idra.js -$CMD"
+    grunt --gruntfile=node_modules/grunt-idra/idra.js -$CMD
+    RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo -e "Failed to set event type ${EVENT_TYPE} with return error code ${RC}"
+        debugme echo -e "Failed to execute grunt command for '-${CMD}' with return error code ${RC}"
         return 1
     fi 
     return 0
@@ -391,7 +392,7 @@ export -f init_dra
 export -f check_dra_enabled
 export -f setup_dra_build
 export -f setup_dra_deploy
-export -f set_event_type
+export -f dra_grunt_cmd
 export -f setup_dra
 
 export DRA_PROJECT_KEY
