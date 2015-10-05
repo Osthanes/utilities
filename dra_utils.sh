@@ -57,7 +57,7 @@ get_dra_prject_key() {
     rm -f "$PROJECT_FILE"
     if [ $RC == 0 ] && [ $(grep -ci "projectkey" "$RESPONCE_FILE") -ne 0 ]; then
         local PROJECT_KEY_INFO=$(cat "$RESPONCE_FILE")
-        export DRA_PROJECT_KEY=$(echo $PROJECT_KEY_INFO | sed 's/.*"projectkey":"//' | sed 's/"}]//g')
+        export DRA_PROJECT_KEY=$(echo $PROJECT_KEY_INFO | sed 's/.*"projectkey":"//' | awk -F "\"" '{print $1}')
         if [ -n "$DRA_PROJECT_KEY" ]; then
             debugme echo -e "Successfully get the project key ${DRA_PROJECT_KEY}"
         else
@@ -200,7 +200,7 @@ init_dra() {
     local RC=$?
     debugme echo -e "$RESPONSE"
     if [ $RC -ne 0 ]; then
-        debugme echo -e "Failed to init_dra. init DRA return error code ${RESULT}"
+        debugme echo -e "Failed to init_dra. init DRA return error code ${RC}"
         return 1
     fi 
 
@@ -261,9 +261,9 @@ setup_dra_build(){
 
     # run grunt-idra -init
     init_dra
-    RESULT=$?
-    if [ $RESULT -ne 0 ]; then
-        debugme echo -e "$WARN" "Failed to init DRA with return error code ${RESULT}."
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo -e "$WARN" "Failed to init DRA with return error code ${RC}."
         return 1
     fi 
 
@@ -297,7 +297,7 @@ setup_dra_deploy(){
     fi 
 
     # set the decision criteria name
-    dra_grunt_cmd "decision=${CRITERIAL_NAME}"
+    dra_grunt_decision "${CRITERIAL_NAME}"
     if [ $RC -ne 0 ]; then
         debugme echo -e "Failed to execute decision for criterial ${CRITERIAL_NAME} with return error code ${RC}."
         return 1
@@ -307,26 +307,74 @@ setup_dra_deploy(){
 }
 
 ###############################
-# run DRA grunt command       #
+# Set Event Type to DRA       #
 ###############################
-dra_grunt_cmd(){
-    local CMD=$1
-    if [ -n "${CMD}" ]; then
-        debugme echo -e "dra_grunt_cmd is '${CMD}'"
-    else
-        debugme echo -e "dra_grunt_cmd failed. input CMD is missing."
-        return 1
-    fi 
+set_event_type(){
+     local EVENT_TYPE=$1
+     if [ -n "${EVENT_TYPE}" ]; then
+         debugme echo -e "EVENT_TYPE is '${EVENT_TYPE}'"
+     else
+         debugme echo -e "EVENT_TYPE is missing."
+         return 1
+     fi 
+ 		 
+     # set the decision criteria name
+     grunt --gruntfile=node_modules/grunt-idra/idra.js -eventType=$EVENT_TYPE
+     local RC=$?
+     if [ $RC -ne 0 ]; then
+         debugme echo -e "Failed to set event type ${EVENT_TYPE} with return error code ${RC}"
+         return 1
+     fi 
+     return 0
+}
 
-    # call grunt command
-    debugme echo -e "grunt CMD: grunt --gruntfile=node_modules/grunt-idra/idra.js -$CMD"
-    grunt --gruntfile=node_modules/grunt-idra/idra.js -$CMD
-    RC=$?
+########################################
+# run DRA grunt decision command       #
+########################################
+dra_grunt_decision(){
+    local CRITERIAL_NAME=$1
+    if [ -n "${CRITERIAL_NAME}" ]; then
+        debugme echo -e "dra_grunt_decision for criterial name '${CRITERIAL_NAME}'"
+    else
+        debugme echo -e "Failed to dra_grunt_decision. criterial name is missing."
+        return 1
+    fi     
+
+    local CMD="-decision=${CRITERIAL_NAME}"
+    debugme echo -e "grunt CMD: grunt --gruntfile=node_modules/grunt-idra/idra.js $CMD"
+    local RESPONSE="$(grunt --gruntfile=node_modules/grunt-idra/idra.js $CMD)"
+    local RC=$?
+    debugme echo -e "$RESPONSE"
     if [ $RC -ne 0 ]; then
         debugme echo -e "Failed to execute grunt command for '-${CMD}' with return error code ${RC}"
         return 1
     fi 
-    return 0
+
+    if [ -n "$RESPONSE" ]; then
+        if [ $(grep -ci "decision" "$RESPONCE_FILE") -ne 0 ]; then
+            export DRA_DECISION=$(echo $RESPONSE | sed 's/.*"decision":"//' | awk -F "\"" '{print $1}')
+            if [ -n "$DRA_DECISION" ]; then
+                if [ "$DRA_DECISION" == "Proceed" ]; then
+                    return 0
+                elif [ "$DRA_DECISION" == "Stop - Advisory" ]; then
+                    return 1
+                elif { "$DRA_DECISION" == "Stop" ]; then
+                    return 2
+                else
+                    return 3
+                fi
+            else
+                debugme echo -e "Failed to get decision result"
+                return 4
+            fi            
+        else
+            debugme echo -e "Failed to get decision result"
+            return 5                            
+        fi
+    else
+        debugme echo -e "Response is empty"
+        return 6        
+    fi
 }
 
 ###############################
@@ -341,7 +389,7 @@ setup_dra(){
         return 1
     fi     
     setup_grunt_idra
-    RESULT=$?
+    local RESULT=$?
     if [ $RESULT -eq 0 ]; then
         # get the DRA Project Key
         get_dra_prject_key
@@ -392,9 +440,11 @@ export -f init_dra
 export -f check_dra_enabled
 export -f setup_dra_build
 export -f setup_dra_deploy
-export -f dra_grunt_cmd
+export -f dra_grunt_decision
 export -f setup_dra
+export -f add_result_rule_to_dra
+export -f set_event_type
 
 export DRA_PROJECT_KEY
 export DRA_ENABLED
-
+export DRA_DECISION
