@@ -36,12 +36,12 @@ get_dra_prject_key() {
 
     # set project.json and dra-response.info files
     local PROJECT_FILE="project.json"
-    local RESPONCE_FILE="dra-response.info"
+    local RESPONSE_FILE="dra-response.info"
     if [ -e "$PROJECT_FILE" ]; then
         rm -f "$PROJECT_FILE"
     fi
-    if [ -e "$RESPONCE_FILE" ]; then
-        rm -f "$RESPONCE_FILE"
+    if [ -e "$RESPONSE_FILE" ]; then
+        rm -f "$RESPONSE_FILE"
     fi
     local PROJECT_FILE_INFO="{\"projectName\": \"${IDS_PROJECT_NAME}\"}"
     echo -e "$PROJECT_FILE_INFO" > "$PROJECT_FILE"
@@ -51,12 +51,12 @@ get_dra_prject_key() {
     debugme echo -e "Fetching DRA project key for $IDS_PROJECT_NAME IDS project" 
     debugme echo -e $(cat "$PROJECT_FILE")
     debugme echo -e "curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL"
-    curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL > "$RESPONCE_FILE"
+    curl -k --silent -H "Content-Type: application/json" -X POST -d @$PROJECT_FILE $DRA_URL > "$RESPONSE_FILE"
     local RC=$?
-    debugme echo -e $(cat "$RESPONCE_FILE")
+    debugme echo -e $(cat "$RESPONSE_FILE")
     rm -f "$PROJECT_FILE"
-    if [ $RC == 0 ] && [ $(grep -ci "projectkey" "$RESPONCE_FILE") -ne 0 ]; then
-        local PROJECT_KEY_INFO=$(cat "$RESPONCE_FILE")
+    if [ $RC == 0 ] && [ $(grep -ci "projectkey" "$RESPONSE_FILE") -ne 0 ]; then
+        local PROJECT_KEY_INFO=$(cat "$RESPONSE_FILE")
         export DRA_PROJECT_KEY=$(echo $PROJECT_KEY_INFO | sed 's/.*"projectkey":"//' | awk -F "\"" '{print $1}')
         if [ -n "$DRA_PROJECT_KEY" ]; then
             debugme echo -e "Successfully get the project key ${DRA_PROJECT_KEY}"
@@ -64,9 +64,9 @@ get_dra_prject_key() {
             debugme echo -e "Failed to get project key"
             return 1
         fi
-        rm -f "$RESPONCE_FILE"
+        rm -f "$RESPONSE_FILE"
     else
-        rm -f "$RESPONCE_FILE"
+        rm -f "$RESPONSE_FILE"
         # unable to curl DRA project key, fail out
         debugme echo -e "get DRA project key failed, could not get DRA project key, rc = $RC"
         return 1
@@ -87,20 +87,20 @@ add_criterial_rule_to_dra() {
     fi 
 
     # set the criterial file
-    local RESPONCE_FILE="dra-response.info"
-    if [ -e "$RESPONCE_FILE" ]; then
-        rm -f "$RESPONCE_FILE"
+    local RESPONSE_FILE="dra-response.info"
+    if [ -e "$RESPONSE_FILE" ]; then
+        rm -f "$RESPONSE_FILE"
     fi
     local DRA_ADD_CRITERIAL_URL="http://da.oneibmcloud.com/api/v1/criteria"
     debugme echo -e "Fetching criterial rules to DRA for $CRITERIAL_FILE."
     debugme echo -e "$(cat $EXT_DIR/utilities/$CRITERIAL_FILE)"
     debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$EXT_DIR/utilities/$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL"
-    curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL > "$RESPONCE_FILE"
+    curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL > "$RESPONSE_FILE"
     local RC=$?
-    debugme echo -e $(cat "$RESPONCE_FILE")
+    debugme echo -e $(cat "$RESPONSE_FILE")
     echo ""
     if [ $RC == 0 ]; then
-        local RESPONCE=$(cat "$RESPONCE_FILE")
+        local RESPONSE=$(cat "$RESPONSE_FILE")
         if [ -n "$RESPONSE" ]; then
             echo $RESPONSE | grep "Invalid"
             RC=$?
@@ -130,20 +130,20 @@ add_result_rule_to_dra() {
     fi 
 
     # set the criterial file
-    local RESPONCE_FILE="dra-response.info"
-    if [ -e "$RESPONCE_FILE" ]; then
-        rm -f "$RESPONCE_FILE"
+    local RESPONSE_FILE="dra-response.info"
+    if [ -e "$RESPONSE_FILE" ]; then
+        rm -f "$RESPONSE_FILE"
     fi
     local DRA_URL="http://da.oneibmcloud.com/api/v1/event"
     debugme echo -e "Fetching result rules to DRA for $RULE_FILE."
     debugme echo -e "$(cat $RULE_FILE)"
     debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL"
-    curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL > "$RESPONCE_FILE"
+    curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL > "$RESPONSE_FILE"
     local RC=$?
-    debugme echo -e $(cat "$RESPONCE_FILE")
+    debugme echo -e $(cat "$RESPONSE_FILE")
     echo ""
     if [ $RC == 0 ]; then
-        local RESPONCE=$(cat "$RESPONCE_FILE")
+        local RESPONSE=$(cat "$RESPONSE_FILE")
         if [ -n "$RESPONSE" ]; then
             echo $RESPONSE | grep "Invalid"
             RC=$?
@@ -351,7 +351,7 @@ dra_grunt_decision(){
     fi 
 
     if [ -n "$RESPONSE" ]; then
-        if [ $(grep -ci "decision" "$RESPONCE") -ne 0 ]; then
+        if [ $(grep -ci "decision" "$RESPONSE") -ne 0 ]; then
             export DRA_DECISION=$(echo $RESPONSE | sed 's/.*"decision":"//' | awk -F "\"" '{print $1}')
             if [ -n "$DRA_DECISION" ]; then
                 if [ "$DRA_DECISION" == "Proceed" ]; then
