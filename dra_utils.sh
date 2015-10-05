@@ -121,42 +121,66 @@ add_criterial_rule_to_dra() {
 # add result to DRA       #
 ###############################
 add_result_rule_to_dra() {
-    local RULE_FILE=$1
-    if [ -n "${RULE_FILE}" ]; then
-        debugme echo -e "Set result rule to DRA in file '${RULE_FILE}'"
+    local RESULT_FILE=$1
+    if [ -n "${RESULT_FILE}" ]; then
+        debugme echo -e "Set result rule to DRA in file '${RESULT_FILE}'"
     else
         debugme echo -e "Set result rule to DRA failed. Result rule file is missing."
         return 1
     fi 
 
     # set the criterial file
-    local RESPONSE_FILE="dra-response.info"
-    if [ -e "$RESPONSE_FILE" ]; then
-        rm -f "$RESPONSE_FILE"
-    fi
-    local DRA_URL="http://da.oneibmcloud.com/api/v1/event"
-    debugme echo -e "Fetching result rules to DRA for $RULE_FILE."
-    debugme echo -e "$(cat $RULE_FILE)"
-    debugme echo -e "curl -k -H Content-Type:application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL"
-    curl -k -H Content-Type:application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RULE_FILE $DRA_URL > "$RESPONSE_FILE"
+#    local RESPONSE_FILE="dra-response.info"
+#    if [ -e "$RESPONSE_FILE" ]; then
+#        rm -f "$RESPONSE_FILE"
+#    fi
+
+    local CMD="-eventType=SecurityScan -file=${RESULT_FILE}"
+    debugme echo -e "Fetching result rules to DRA for $RESULT_FILE."
+    debugme echo -e "$(cat $RESULT_FILE)"
+    debugme echo -e "grunt CMD: grunt --gruntfile=node_modules/grunt-idra/idra.js $CMD"
+    local RESPONSE="$(grunt --gruntfile=node_modules/grunt-idra/idra.js $CMD)"
     local RC=$?
-    debugme echo -e $(cat "$RESPONSE_FILE")
-    echo ""
-    if [ $RC == 0 ]; then
-        local RESPONSE=$(cat "$RESPONSE_FILE")
-        if [ -n "$RESPONSE" ]; then
-            echo $RESPONSE | grep "Invalid"
-            RC=$?
-            if [ $RC -eq 0 ]; then
-                return 1
-            else
-                debugme echo -e "Successfully sent the result rule file $CRITERIAL_FILE to DRA."
-           fi
-        fi
-    else
-        debugme echo -e "Failed to send result file $CRITERIAL_FILE to DRA."
+    debugme echo -e "$RESPONSE"
+    if [ $RC -ne 0 ]; then
+        debugme echo -e "Failed to execute grunt command for '${CMD}' with return error code ${RC}"
         return 1
+    fi 
+
+    if [ -n "$RESPONSE" ]; then
+        echo $RESPONSE | grep "Invalid"
+        RC=$?
+        if [ $RC -eq 0 ]; then
+            return 1
+        else
+            debugme echo -e "Successfully sent the result rule file $CRITERIAL_FILE to DRA."
+       fi
     fi
+
+
+ #   local DRA_URL="http://da.oneibmcloud.com/api/v1/event"
+ #   debugme echo -e "Fetching result rules to DRA for $RESULT_FILE."
+ #   debugme echo -e "$(cat $RESULT_FILE)"
+ #   debugme echo -e "curl -k -H Content-Type:application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RESULT_FILE $DRA_URL"
+ #   curl -k -H Content-Type:application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RESULT_FILE $DRA_URL > "$RESPONSE_FILE"
+ #   local RC=$?
+ #   debugme echo -e $(cat "$RESPONSE_FILE")
+ #   echo ""
+ #   if [ $RC == 0 ]; then
+ #       local RESPONSE=$(cat "$RESPONSE_FILE")
+ #       if [ -n "$RESPONSE" ]; then
+ #           echo $RESPONSE | grep "Invalid"
+ #           RC=$?
+ #           if [ $RC -eq 0 ]; then
+ #               return 1
+ #           else
+ #               debugme echo -e "Successfully sent the result rule file $CRITERIAL_FILE to DRA."
+ #          fi
+ #       fi
+ #   else
+ #       debugme echo -e "Failed to send result file $CRITERIAL_FILE to DRA."
+ #       return 1
+ #   fi
     return 0
 }
 
@@ -346,12 +370,14 @@ dra_grunt_decision(){
     local RC=$?
     debugme echo -e "$RESPONSE"
     if [ $RC -ne 0 ]; then
-        debugme echo -e "Failed to execute grunt command for '-${CMD}' with return error code ${RC}"
+        debugme echo -e "Failed to execute grunt command for '${CMD}' with return error code ${RC}"
         return 1
     fi 
 
     if [ -n "$RESPONSE" ]; then
-        if [ $(grep -ci "decision" "$RESPONSE") -ne 0 ]; then
+        echo $RESPONSE | grep "decision"
+        RC=$?
+        if [ $RC -eq 0 ]; then
             export DRA_DECISION=$(echo $RESPONSE | sed 's/.*"decision":"//' | awk -F "\"" '{print $1}')
             if [ -n "$DRA_DECISION" ]; then
                 if [ "$DRA_DECISION" == "Proceed" ]; then
