@@ -93,8 +93,8 @@ add_criterial_rule_to_dra() {
     fi
     local DRA_ADD_CRITERIAL_URL="http://da.oneibmcloud.com/api/v1/criteria"
     debugme echo -e "Fetching criterial rules to DRA for $CRITERIAL_FILE."
-    debugme echo -e "$(cat $CRITERIAL_FILE)"
-    debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL"
+    debugme echo -e "$(cat $EXT_DIR/utilities/$CRITERIAL_FILE)"
+    debugme echo -e "curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$EXT_DIR/utilities/$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL"
     curl -k --silent -H Content-Type: application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$CRITERIAL_FILE $DRA_ADD_CRITERIAL_URL > "$RESPONCE_FILE"
     local RC=$?
     debugme echo -e $(cat "$RESPONCE_FILE")
