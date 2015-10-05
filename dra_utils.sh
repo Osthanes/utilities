@@ -351,7 +351,7 @@ dra_grunt_decision(){
     fi 
 
     if [ -n "$RESPONSE" ]; then
-        if [ $(grep -ci "decision" "$RESPONCE_FILE") -ne 0 ]; then
+        if [ $(grep -ci "decision" "$RESPONCE") -ne 0 ]; then
             export DRA_DECISION=$(echo $RESPONSE | sed 's/.*"decision":"//' | awk -F "\"" '{print $1}')
             if [ -n "$DRA_DECISION" ]; then
                 if [ "$DRA_DECISION" == "Proceed" ]; then
