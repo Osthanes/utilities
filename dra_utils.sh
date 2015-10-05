@@ -358,7 +358,7 @@ dra_grunt_decision(){
                     return 0
                 elif [ "$DRA_DECISION" == "Stop - Advisory" ]; then
                     return 1
-                elif { "$DRA_DECISION" == "Stop" ]; then
+                elif [ "$DRA_DECISION" == "Stop" ]; then
                     return 2
                 else
                     return 3
