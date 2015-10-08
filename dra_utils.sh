@@ -102,9 +102,7 @@ add_criterial_rule_to_dra() {
     if [ $RC == 0 ]; then
         local RESPONSE=$(cat "$RESPONSE_FILE")
         if [ -n "$RESPONSE" ]; then
-            echo $RESPONSE | grep "Invalid"
-            RC=$?
-            if [ $RC -eq 0 ]; then
+            if [ $(echo "$RESPONSE" | grep -ci "SyntaxError") -ne 0  ] || [ $(echo "$RESPONSE" | grep -ci "Invalid") -ne 0  ]; then 
                 return 1
             else
                 debugme echo -e "Successfully sent the criterial rules file $CRITERIAL_FILE to DRA"
@@ -148,8 +146,7 @@ add_result_rule_to_dra() {
     fi 
 
     if [ -n "$RESPONSE" ]; then
-        echo $RESPONSE | grep "Invalid"
-        RC=$?
+        if [ $(echo "$RESPONSE" | grep -ci "SyntaxError") -ne 0  ] || [ $(echo "$RESPONSE" | grep -ci "Invalid") -ne 0  ]; then
         if [ $RC -eq 0 ]; then
             return 1
         else
