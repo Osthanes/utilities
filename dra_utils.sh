@@ -375,14 +375,19 @@ dra_grunt_decision(){
         RC=$?
         if [ $RC -eq 0 ]; then
             export DRA_DECISION=$(echo $RESPONSE | sed 's/.*"decision":"//' | awk -F "\"" '{print $1}')
+            export DRA_REPORT_URL=$(echo $RESPONSE | sed 's/.*Check the report at -//' | awk -F "\"" '{print $1}')
             if [ -n "$DRA_DECISION" ]; then
                 if [ "$DRA_DECISION" == "Proceed" ]; then
+                    ${EXT_DIR}/utilities/sendMessage.sh -l good -m "Check the Deployment Risk Analytics decision report at - ${DRA_REPORT_URL}"
                     return 0
                 elif [ "$DRA_DECISION" == "Stop - Advisory" ]; then
+                    ${EXT_DIR}/utilities/sendMessage.sh -l good -m "Check the Deployment Risk Analytics decision report at - ${DRA_REPORT_URL}"
                     return 1
                 elif [ "$DRA_DECISION" == "Stop" ]; then
+                    ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Check the Deployment Risk Analytics decision report at - ${DRA_REPORT_URL}"
                     return 2
                 else
+                    debugme echo -e "Failed to get correct decision result. The DRA_DECISION is ${DRA_DECISION}"
                     return 3
                 fi
             else
@@ -470,3 +475,4 @@ export -f set_event_type
 export DRA_PROJECT_KEY
 export DRA_ENABLED
 export DRA_DECISION
+export DRA_REPORT_URL
