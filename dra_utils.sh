@@ -375,7 +375,7 @@ dra_grunt_decision(){
         RC=$?
         if [ $RC -eq 0 ]; then
             export DRA_DECISION=$(echo $RESPONSE | sed 's/.*"decision":"//' | awk -F "\"" '{print $1}')
-            export DRA_REPORT_URL=$(echo $RESPONSE | sed 's/.*Check the report at -//' | awk -F "[" '{print $1}')
+            export DRA_REPORT_URL=$(echo $RESPONSE | sed 's/.*Check the report at - //' | awk -F "[" '{print $1}')
             if [ -n "$DRA_DECISION" ]; then
                 if [ "$DRA_DECISION" == "Proceed" ]; then
                     ${EXT_DIR}/utilities/sendMessage.sh -l good -m "<${DRA_REPORT_URL}|Deployment Risk Analytics Decision Report> with decision: ${DRA_DECISION}."
