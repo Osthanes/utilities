@@ -465,7 +465,7 @@ setup_dra(){
 }
 
 export -f get_dra_prject_key
-export -f add_criterial_for_dra
+export -f add_criterial_rule_to_dra
 export -f setup_grunt_idra
 export -f init_dra
 export -f check_dra_enabled
