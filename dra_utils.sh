@@ -378,13 +378,13 @@ dra_grunt_decision(){
             export DRA_REPORT_URL=$(echo $RESPONSE | sed 's/.*Check the report at - //' | awk -F "[" '{print $1}')
             if [ -n "$DRA_DECISION" ]; then
                 if [ "$DRA_DECISION" == "Proceed" ]; then
-                    ${EXT_DIR}/utilities/sendMessage.sh -l good -m "<${DRA_REPORT_URL}|Deployment Risk Analytics Decision Report> with decision: ${DRA_DECISION}."
+                    ${EXT_DIR}/utilities/sendMessage.sh -l good -m "Check the <${DRA_REPORT_URL}|'Deployment Risk Analytics Decision'> report with decision: '${DRA_DECISION}'."
                     return 0
                 elif [ "$DRA_DECISION" == "Stop - Advisory" ]; then
-                    ${EXT_DIR}/utilities/sendMessage.sh -l good -m "<${DRA_REPORT_URL}|Deployment Risk Analytics Decision Report> with decision: ${DRA_DECISION}."
+                    ${EXT_DIR}/utilities/sendMessage.sh -l good -m "Check the <${DRA_REPORT_URL}|'Deployment Risk Analytics Decision'> report with decision: '${DRA_DECISION}'."
                     return 1
                 elif [ "$DRA_DECISION" == "Stop" ]; then
-                    ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "<${DRA_REPORT_URL}|Deployment Risk Analytics Decision Report> with decision: ${DRA_DECISION}."
+                    ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Check the <${DRA_REPORT_URL}|'Deployment Risk Analytics Decision'> report with decision: '${DRA_DECISION}'."
                     return 2
                 else
                     debugme echo -e "Failed to get correct decision result. The DRA_DECISION is ${DRA_DECISION}"
@@ -431,6 +431,10 @@ setup_dra(){
                 check_dra_enabled
                 RESULT=$?
                 if [ $RESULT -eq 0 ]; then
+                    # delete criterial rule
+                    debugme echo -e "Checking and deleting the previous criterial rule"
+                    local DRA_ADD_CRITERIAL_URL="http://da.oneibmcloud.com/api/v1/criteria"
+                    curl -k -H projectKey:$DRA_PROJECT_KEY -X DELETE $DRA_ADD_CRITERIAL_URL?name=$CRITERIAL_NAME
                     # add criterial for DRA
                     add_criterial_rule_to_dra "${CRITERIAL_NAME}.json"
                     RESULT=$?
