@@ -129,7 +129,6 @@ add_result_rule_to_dra() {
         debugme echo -e "Set result rule to DRA failed. Result event type is missing."
         return 1
     fi 
-
     debugme echo -e "Set result rule with eventType '${EVENT_TYPE}' to DRA in file '${RESULT_FILE}'"
 
     local CMD="-eventType=${EVENT_TYPE} -file=${RESULT_FILE}"
