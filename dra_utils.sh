@@ -120,20 +120,19 @@ add_criterial_rule_to_dra() {
 ###############################
 add_result_rule_to_dra() {
     local RESULT_FILE=$1
-    if [ -n "${RESULT_FILE}" ]; then
-        debugme echo -e "Set result rule to DRA in file '${RESULT_FILE}'"
-    else
+    local EVENT_TYPE=$2
+    if [ -z "${RESULT_FILE}" ]; then
         debugme echo -e "Set result rule to DRA failed. Result rule file is missing."
         return 1
     fi 
+    if [ -z "${EVENT_TYPE}" ]; then
+        debugme echo -e "Set result rule to DRA failed. Result event type is missing."
+        return 1
+    fi 
 
-    # set the criterial file
-#    local RESPONSE_FILE="dra-response.info"
-#    if [ -e "$RESPONSE_FILE" ]; then
-#        rm -f "$RESPONSE_FILE"
-#    fi
+    debugme echo -e "Set result rule with eventType '${EVENT_TYPE}' to DRA in file '${RESULT_FILE}'"
 
-    local CMD="-eventType=SecurityScan -file=${RESULT_FILE}"
+    local CMD="-eventType=${EVENT_TYPE} -file=${RESULT_FILE}"
     debugme echo -e "Fetching result rules to DRA for $RESULT_FILE."
     debugme echo -e "$(cat $RESULT_FILE)"
     debugme echo -e "grunt CMD: grunt --gruntfile=node_modules/grunt-idra/idra.js $CMD"
@@ -153,30 +152,6 @@ add_result_rule_to_dra() {
        fi
     fi
 
-
- #   local DRA_URL="http://da.oneibmcloud.com/api/v1/event"
- #   debugme echo -e "Fetching result rules to DRA for $RESULT_FILE."
- #   debugme echo -e "$(cat $RESULT_FILE)"
- #   debugme echo -e "curl -k -H Content-Type:application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RESULT_FILE $DRA_URL"
- #   curl -k -H Content-Type:application/json -H projectKey:$DRA_PROJECT_KEY -X POST -d @$RESULT_FILE $DRA_URL > "$RESPONSE_FILE"
- #   local RC=$?
- #   debugme echo -e $(cat "$RESPONSE_FILE")
- #   echo ""
- #   if [ $RC == 0 ]; then
- #       local RESPONSE=$(cat "$RESPONSE_FILE")
- #       if [ -n "$RESPONSE" ]; then
- #           echo $RESPONSE | grep "Invalid"
- #           RC=$?
- #           if [ $RC -eq 0 ]; then
- #               return 1
- #           else
- #               debugme echo -e "Successfully sent the result rule file $CRITERIAL_FILE to DRA."
- #          fi
- #       fi
- #   else
- #       debugme echo -e "Failed to send result file $CRITERIAL_FILE to DRA."
- #       return 1
- #   fi
     return 0
 }
 
