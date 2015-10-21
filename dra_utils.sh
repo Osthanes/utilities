@@ -121,6 +121,7 @@ add_criterial_rule_to_dra() {
 add_result_rule_to_dra() {
     local RESULT_FILE=$1
     local EVENT_TYPE=$2
+    local CMD=""
     if [ -z "${RESULT_FILE}" ]; then
         debugme echo -e "Set result rule to DRA failed. Result rule file is missing."
         return 1
@@ -131,7 +132,13 @@ add_result_rule_to_dra() {
     fi 
     debugme echo -e "Set result rule with eventType '${EVENT_TYPE}' to DRA in file '${RESULT_FILE}'"
 
-    local CMD="-eventType=${EVENT_TYPE} -file=${RESULT_FILE}"
+    DRILL_DOWN_URL_FILE="result_url"
+    if [ -e "$DRILL_DOWN_URL_FILE" ]; then
+        local DRILL_DOWN_URL=$(cat ${EXT_DIR}/$DRILL_DOWN_URL_FILE)
+        CMD="-eventType=${EVENT_TYPE} -file=${RESULT_FILE} -drilldownUrl=${DRILL_DOWN_URL}"
+    else
+        CMD="-eventType=${EVENT_TYPE} -file=${RESULT_FILE}"
+    fi 
     debugme echo -e "Fetching result rules to DRA for $RESULT_FILE."
     debugme echo -e "$(cat $RESULT_FILE)"
     debugme echo -e "grunt CMD: grunt --gruntfile=node_modules/grunt-idra/idra.js $CMD"
