@@ -134,7 +134,7 @@ add_result_rule_to_dra() {
 
     DRILL_DOWN_URL_FILE="result_url"
     if [ -e "$DRILL_DOWN_URL_FILE" ]; then
-        local DRILL_DOWN_URL=$(cat ${EXT_DIR}/$DRILL_DOWN_URL_FILE)
+        local DRILL_DOWN_URL=$(cat $DRILL_DOWN_URL_FILE)
         CMD="-eventType=${EVENT_TYPE} -file=${RESULT_FILE} -drilldownUrl=${DRILL_DOWN_URL}"
     else
         CMD="-eventType=${EVENT_TYPE} -file=${RESULT_FILE}"
