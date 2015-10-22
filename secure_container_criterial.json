@@ -59,8 +59,7 @@
 				{
 					"eval": "filecontents.all_jobs_complete",
 					"op": "=",
-					"value": true,
-					"reportType": "Attributes"
+					"value": true
 				},
 
 				{
