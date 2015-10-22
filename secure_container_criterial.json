@@ -53,6 +53,7 @@
 		},
 		{
 			"name": "StaticSecurityScasnAnalysis",
+			"mode": "advisory",
 			"conditions":
 			[
 				{
@@ -69,7 +70,7 @@
 
 				{
 					"eval": "filecontents.medium_issue_count",
-					"op": "=",
+					"op": "<",
 					"value": 2
 				},
 
