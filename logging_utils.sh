@@ -87,6 +87,150 @@ install_logstash_forwarder() {
     return 0
 }
 
+setup_logstash_forwarder() {
+    local LOG_SPACE_ID=$1
+    local LOG_LOGGING_TOKEN=$2
+    local BMIX_ORG=$3
+    local BMIX_USER=$4
+    local BMIX_TARGET_PREFIX=$5
+    local RC=0
+
+    # point logstash forwarder to read config files
+    local CONF_D_DIR="${EXT_DIR}/conf.d"
+    if [[ ! -e ${CONF_D_DIR} ]]; then
+        mkdir ${CONF_D_DIR}
+    fi
+
+    local PIPELINE_LOG_CONF_FILENAME="${CONF_D_DIR}/pipeline_log.conf"
+    local MULTITENANT_CONF_FILE="${CONF_D_DIR}/multitenant.conf"
+    local NETWORK_CONF_FILE="${CONF_D_DIR}/network.conf"
+
+    # set pipeline log coniguation file
+    local PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
+    if [ -e "$PIPELINE_LOG_CONF_FILENAME" ]; then
+        rm -f "$PIPELINE_LOG_CONF_FILENAME"
+    fi
+    echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
+    debugme echo "logmet pipeline log coniguation file: $(cat $PIPELINE_LOG_CONF_FILENAME)"
+    # set Multi-tenant configuation file
+    if [ -e "$MULTITENANT_CONF_FILE" ]; then
+        rm -f "$MULTITENANT_CONF_FILE"
+    fi
+    echo -e "{" >> $MULTITENANT_CONF_FILE
+    echo -e "   \"multitenant\": {" >> $MULTITENANT_CONF_FILE
+    echo -e "       \"tenant_id\": \"${LOG_SPACE_ID}\"," >> $MULTITENANT_CONF_FILE
+    echo -e "       \"password\" : \"${LOG_LOGGING_TOKEN}\"," >> $MULTITENANT_CONF_FILE
+    echo -e "       \"inserted_keypairs\" : {" >> $MULTITENANT_CONF_FILE
+    echo -e "           \"stack_id\" : \"${BMIX_ORG}\"," >> $MULTITENANT_CONF_FILE
+    echo -e "           \"instance_id\" : \"${BMIX_USER}\"" >> $MULTITENANT_CONF_FILE
+    echo -e "       }" >> $MULTITENANT_CONF_FILE
+    echo -e "   }" >> $MULTITENANT_CONF_FILE
+    echo -e "}" >> $MULTITENANT_CONF_FILE
+    debugme echo "logmet multi-tenant configuation file: $(cat $MULTITENANT_CONF_FILE)"
+    # set Network coniguation file
+    if [ -e "$NETWORK_CONF_FILE" ]; then
+        rm -f "$NETWORK_CONF_FILE"
+    fi
+    echo -e "{" >> $NETWORK_CONF_FILE
+    echo -e "   \"network\": {" >> $NETWORK_CONF_FILE
+    echo -e "       \"servers\": [ \"${BMIX_TARGET_PREFIX}\" ]," >> $NETWORK_CONF_FILE
+    echo -e "       \"timeout\": 15" >> $NETWORK_CONF_FILE
+    echo -e "   }" >> $NETWORK_CONF_FILE
+    echo -e "}" >> $NETWORK_CONF_FILE
+    debugme echo "logmet network configuation file: $(cat $NETWORK_CONF_FILE)"
+    # Run the mt-logstash-forwarder in the foreground
+    debugme echo "Run mt-logstash-forwarder service" 
+    /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config ${EXT_DIR}/conf.d -spool-size 100 -quiet true 2> /dev/null &
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not start mt-logstash-forwarder service, rc = $RC"
+        return 7
+    fi
+}
+
+setup_logstash_agent() {
+    local LOG_SPACE_ID=$1
+    local LOG_LOGGING_TOKEN=$2
+    local BMIX_ORG=$3
+    local BMIX_USER=$4
+    local BMIX_TARGET_PREFIX=$5
+    local RC=0
+
+    # Download the Logstash distribution
+    local cur_dir=`pwd`
+    cd /opt
+    # TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
+        cd $cur_dir
+        return 21
+    fi
+    tar xzf logstash-mtlumberjack.tgz
+    cd $cur_dir
+ 
+    # Install java jre
+    #sudo apt-get install default-jre
+
+    # point logstash configuration directory to read config files
+    local CONF_D_DIR="${EXT_DIR}/conf.d"
+    if [[ ! -e ${CONF_D_DIR} ]]; then
+        mkdir ${CONF_D_DIR}
+    fi
+
+    local INPUT_CONF_FILENAME="${CONF_D_DIR}/input.conf"
+    local FILTER_CONF_FILE="${CONF_D_DIR}/filter.conf"
+    local OUTPUT_CONF_FILE="${CONF_D_DIR}/output.conf"
+
+    # set input coniguation file
+    if [ -e "$INPUT_CONF_FILENAME" ]; then
+        rm -f "$INPUT_CONF_FILENAME"
+    fi
+    echo -e "input {" >> $INPUT_CONF_FILENAME
+    echo -e "   path => '${PIPELINE_LOGGING_FILE}'" >> $INPUT_CONF_FILENAME
+    echo -e "       type => 'pipeline_tracking'" >> $INPUT_CONF_FILENAME
+    echo -e "   }" >> $INPUT_CONF_FILENAME
+    echo -e "}" >> $INPUT_CONF_FILENAME
+    debugme echo "input configuration file: $(cat $INPUT_CONF_FILENAME)"
+
+    # set filter coniguation file
+    if [ -e "$FILTER_CONF_FILE" ]; then
+        rm -f "$FILTER_CONF_FILE"
+    fi
+    echo -e "filter {" >> $FILTER_CONF_FILE
+    echo -e "   json {" >> $FILTER_CONF_FILE
+    echo -e "       source => \"message\"" >> $FILTER_CONF_FILE
+    echo -e "   }" >> $FILTER_CONF_FILE
+    echo -e "}" >> $FILTER_CONF_FILE
+    debugme echo "filter configuation file: $(cat $FILTER_CONF_FILE)"
+
+    # set output coniguation file
+    if [ -e "$OUTPUT_CONF_FILE" ]; then
+        rm -f "$OUTPUT_CONF_FILE"
+    fi
+    local LOG_BMIX_TARGET=$(echo $BMIX_TARGET_PREFIX | sed -e 's/\(:9091\)*$//g')
+    echo -e "output {" >> $OUTPUT_CONF_FILE
+    echo -e "   mtlumberjack {" >> $OUTPUT_CONF_FILE
+    echo -e "       hosts => [\"${LOG_BMIX_TARGET}\"]" >> $OUTPUT_CONF_FILE
+    echo -e "       port => 9091" >> $OUTPUT_CONF_FILE
+    echo -e "       tenant_id => \"${LOG_SPACE_ID}\"" >> $OUTPUT_CONF_FILE
+    echo -e "       tenant_password => \"${LOG_LOGGING_TOKEN}\"" >> $OUTPUT_CONF_FILE
+    echo -e "       codec => \"json\"" >> $OUTPUT_CONF_FILE
+    echo -e "   }" >> $OUTPUT_CONF_FILE
+    echo -e "}" >> $OUTPUT_CONF_FILE
+    debugme echo "loutput configuation file: $(cat $OUTPUT_CONF_FILE)"
+
+    # Run the logstash agent plugin
+    debugme echo "Run logstash agent plugin service" 
+    /opt/logstash/bin/logstash agent -f <Your_path_dir>/conf.d 2> /dev/null &
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
+        return 22
+    fi
+
+}
+
 # set up for calls to the logging service - takes parameters
 # User   : required, bluemix userid
 # Pwd    : required, bluemix password
@@ -206,62 +350,20 @@ setup_met_logging() {
     fi
     echo "" > "$PIPELINE_LOGGING_FILE"
 
-    # point logstash forwarder to read config files
-    local CONF_D_DIR="${EXT_DIR}/conf.d"
-    if [[ ! -e ${CONF_D_DIR} ]]; then
-        mkdir ${CONF_D_DIR}
-    fi
-    local PIPELINE_LOG_CONF_FILENAME="${CONF_D_DIR}/pipeline_log.conf"
-    local MULTITENANT_CONF_FILE="${CONF_D_DIR}/multitenant.conf"
-    local NETWORK_CONF_FILE="${CONF_D_DIR}/network.conf"
-
-    # set pipeline log coniguation file
-    local PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
-    if [ -e "$PIPELINE_LOG_CONF_FILENAME" ]; then
-        rm -f "$PIPELINE_LOG_CONF_FILENAME"
-    fi
-    echo -e "$PIPELINE_LOG_CONF_TEMPLATE" > "$PIPELINE_LOG_CONF_FILENAME"
-    debugme echo "logmet pipeline log coniguation file: $(cat $PIPELINE_LOG_CONF_FILENAME)"
-    # set Multi-tenant coniguation file
-    if [ -e "$MULTITENANT_CONF_FILE" ]; then
-        rm -f "$MULTITENANT_CONF_FILE"
-    fi
-    echo -e "{" >> $MULTITENANT_CONF_FILE
-    echo -e "   \"multitenant\": {" >> $MULTITENANT_CONF_FILE
-    echo -e "       \"tenant_id\": \"${LOG_SPACE_ID}\"," >> $MULTITENANT_CONF_FILE
-    echo -e "       \"password\" : \"${LOG_LOGGING_TOKEN}\"," >> $MULTITENANT_CONF_FILE
-    echo -e "       \"inserted_keypairs\" : {" >> $MULTITENANT_CONF_FILE
-    echo -e "           \"stack_id\" : \"${BMIX_ORG}\"," >> $MULTITENANT_CONF_FILE
-    echo -e "           \"instance_id\" : \"${BMIX_USER}\"" >> $MULTITENANT_CONF_FILE
-    echo -e "       }" >> $MULTITENANT_CONF_FILE
-    echo -e "   }" >> $MULTITENANT_CONF_FILE
-    echo -e "}" >> $MULTITENANT_CONF_FILE
-    debugme echo "logmet multi-tenant coniguation file: $(cat $MULTITENANT_CONF_FILE)"
-    # set Network coniguation file
-    if [ -e "$NETWORK_CONF_FILE" ]; then
-        rm -f "$NETWORK_CONF_FILE"
-    fi
-    echo -e "{" >> $NETWORK_CONF_FILE
-    echo -e "   \"network\": {" >> $NETWORK_CONF_FILE
-    echo -e "       \"servers\": [ \"${BMIX_TARGET_PREFIX}\" ]," >> $NETWORK_CONF_FILE
-    echo -e "       \"timeout\": 15" >> $NETWORK_CONF_FILE
-    echo -e "   }" >> $NETWORK_CONF_FILE
-    echo -e "}" >> $NETWORK_CONF_FILE
-    debugme echo "logmet network coniguation file: $(cat $NETWORK_CONF_FILE)"
-    # Run the mt-logstash-forwarder in the foreground
-    debugme echo "Run mt-logstash-forwarder service" 
-    /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config ${EXT_DIR}/conf.d -spool-size 100 -quiet true 2> /dev/null &
+    setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+#    setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
     RC=$?
     if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not start mt-logstash-forwarder service, rc = $RC"
-        return 7
+        debugme echo "setup_logstash_forwarder failed with return code ${RC}"
+        return $RC
+    else
+        # flag logging enabled for other extensions to use
+        debugme echo "Logging setup and enabled"
+        export LOGMET_LOGGING_ENABLED=1
+        return 0
     fi
-    
-    # flag logging enabled for other extensions to use
-    debugme echo "Logging setup and enabled"
-    export LOGMET_LOGGING_ENABLED=1
-    return 0
 }
+
 
 DEBUGGING="DEBUGGING_LEVEL"
 INFO="INFO_LEVEL"
@@ -407,6 +509,8 @@ get_error_info() {
 
 # begin main execution sequence
 
+export -f setup_logstash_forwarder
+export -f setup_logstash_agent
 export -f setup_met_logging
 export -f log_and_echo
 export -f print_errors
