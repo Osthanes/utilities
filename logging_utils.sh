@@ -159,7 +159,7 @@ setup_logstash_agent() {
     # Download the Logstash distribution
     local cur_dir=`pwd`
     cd /opt
-    wget http://pokgsa.ibm.com/gsa/pokgsa/home/f/a/fabolive/web/public/logstash-mtlumberjack/logstash-mtlumberjack.tgz
+    # TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
