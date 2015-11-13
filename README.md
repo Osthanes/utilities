@@ -1,6 +1,9 @@
 # utilities
 Set of utility scripts used by IBM DevOps Services extensions
 
+# dra_utils.sh 
+Purpose: Provide a Deployment Risk Analytics (DRA) utility to register the IDS project with DRA, set the criteria file and new events to DRA, and request decision report from DRA.
+
 # logging_utils.sh 
 Purpose: Provide a common utility to log a message to the console, and send to Logging Service from a bash script
 
