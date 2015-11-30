@@ -159,8 +159,7 @@ setup_logstash_agent() {
     # Download the Logstash distribution
     local cur_dir=`pwd`
     cd /opt
-    # Download the logstash-mtlumberjack.tgz
-    wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz
+    # TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
@@ -351,8 +350,8 @@ setup_met_logging() {
     fi
     echo "" > "$PIPELINE_LOGGING_FILE"
 
-#    setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
-    setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+    setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+#    setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "setup_logstash_forwarder failed with return code ${RC}"
