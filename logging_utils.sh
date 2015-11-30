@@ -395,6 +395,14 @@ log_and_echo() {
             local LOGGER_LEVEL=$INFO_LEVEL
         fi
     fi
+    if [ -z "$LOGGER_PHASE" ]; then
+        #setting as local so other code won't think it has been set externally
+        local LOGGER_PHASE="${IDS_PROJECT_NAME} | ${IDS_STAGE_NAME} | ${IDS_JOB_NAME}"
+    fi
+    if [ -z "$LOGGER_MODULE" ]; then
+        #setting as local so other code won't think it has been set externally
+        local LOGGER_MODULE="pipeline-${MODULE_NAME}"
+    fi
     local MSG_TYPE="$1"
     if [ "$INFO" == "$MSG_TYPE" ]; then
         shift
@@ -447,7 +455,7 @@ log_and_echo() {
         if [ -e $PIPELINE_LOGGING_FILE ]; then
             local timestamp=`date +"%F %T %Z"`
             L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
-            echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"pipeline-${MODULE_NAME}\", \"phase\": \"${IDS_PROJECT_NAME} | ${IDS_STAGE_NAME} | ${IDS_JOB_NAME}\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
+            echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"${LOGGER_MODULE}\", \"phase\": \"${LOGGER_PHASE}\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
         else
             # no logger file, send to syslog
             logger -t "pipeline" "$L_MSG"
