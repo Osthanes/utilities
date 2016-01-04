@@ -157,18 +157,18 @@ setup_logstash_agent() {
     local RC=0
 
     # Download the Logstash distribution
-    #local cur_dir=`pwd`
-    #cd /opt
+    local cur_dir=`pwd`
+    cd /opt
     ## TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
-    #wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz
-    #RC=$?
-    #if [ $RC -ne 0 ]; then
-    #    debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
-    #    cd $cur_dir
-    #    return 21
-    #fi
-    #tar xzf logstash-mtlumberjack.tgz
-    #cd $cur_dir
+    wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
+        cd $cur_dir
+        return 21
+    fi
+    tar xzf logstash-mtlumberjack.tgz
+    cd $cur_dir
  
     # Install java jre
     #sudo apt-get install default-jre
