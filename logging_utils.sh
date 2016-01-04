@@ -104,6 +104,7 @@ setup_logstash_forwarder() {
     local PIPELINE_LOG_CONF_FILENAME="${CONF_D_DIR}/pipeline_log.conf"
     local MULTITENANT_CONF_FILE="${CONF_D_DIR}/multitenant.conf"
     local NETWORK_CONF_FILE="${CONF_D_DIR}/network.conf"
+    local FILTER_CONF_FILE="${CONF_D_DIR}/filter.conf"
 
     # set pipeline log coniguation file
     local PIPELINE_LOG_CONF_TEMPLATE="{\"files\": [ { \"paths\": [ \"${PIPELINE_LOGGING_FILE}\" ] } ] }"
@@ -138,6 +139,18 @@ setup_logstash_forwarder() {
     echo -e "   }" >> $NETWORK_CONF_FILE
     echo -e "}" >> $NETWORK_CONF_FILE
     debugme echo "logmet network configuation file: $(cat $NETWORK_CONF_FILE)"
+    
+    # set filter coniguation file
+    if [ -e "$FILTER_CONF_FILE" ]; then
+        rm -f "$FILTER_CONF_FILE"
+    fi
+    echo -e "filter {" >> $FILTER_CONF_FILE
+    echo -e "   json {" >> $FILTER_CONF_FILE
+    echo -e "       source => \"message\"" >> $FILTER_CONF_FILE
+    echo -e "   }" >> $FILTER_CONF_FILE
+    echo -e "}" >> $FILTER_CONF_FILE
+    debugme echo "filter configuation file: $(cat $FILTER_CONF_FILE)"
+    
     # Run the mt-logstash-forwarder in the foreground
     debugme echo "Run mt-logstash-forwarder service" 
     /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config ${EXT_DIR}/conf.d -spool-size 100 -quiet true 2> /dev/null &
