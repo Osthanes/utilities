@@ -242,6 +242,7 @@ setup_met_logging() {
     local BMIX_TARGET=""
     local BMIX_TARGET_PREFIX=""
     local APT_TARGET_PREFIX=""
+    local USE_AGENT=""
     local RC=0
 
     if [ -z $1 ]; then
@@ -255,7 +256,13 @@ setup_met_logging() {
         return 2
     else
         BMIX_PWD=$2
-    fi   
+    fi
+    if [ -z $3 ]; then
+        debugme echo "Using logstash forwarder"
+    else
+        debugme echo "Using logstash agent"
+        USE_AGENT="true"
+    fi
     # get bluemix space and org
     if [ -z "$BLUEMIX_SPACE" ] || [ -z "$BLUEMIX_ORG" ]; then 
         ice_retry_save_output info 2>/dev/null
@@ -350,8 +357,11 @@ setup_met_logging() {
     fi
     echo "" > "$PIPELINE_LOGGING_FILE"
 
-    setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
-#    setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+    if [ -z "$USE_AGENT" ]; then
+        setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+    else
+        setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+    fi
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "setup_logstash_forwarder failed with return code ${RC}"
