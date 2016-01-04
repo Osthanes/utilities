@@ -160,7 +160,7 @@ setup_logstash_agent() {
     local cur_dir=`pwd`
     cd /opt
     ## TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
-    wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz
+    wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
@@ -230,6 +230,8 @@ setup_logstash_agent() {
         debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
         return 22
     fi
+    sleep 20
+    #give the agent time to come up
 
 }
 
