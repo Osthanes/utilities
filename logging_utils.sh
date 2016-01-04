@@ -224,7 +224,7 @@ setup_logstash_agent() {
 
     # Run the logstash agent plugin
     debugme echo "Run logstash agent plugin service" 
-    /opt/logstash/bin/logstash agent -f "$CONF_D_DIR" 2> /dev/null &
+    /opt/logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
