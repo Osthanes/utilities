@@ -160,12 +160,13 @@ setup_logstash_agent() {
     #local cur_dir=`pwd`
     #cd /opt
     ## TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
+    #wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz
     #RC=$?
     #if [ $RC -ne 0 ]; then
     #    debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
     #    cd $cur_dir
     #    return 21
-        #fi
+    #fi
     #tar xzf logstash-mtlumberjack.tgz
     #cd $cur_dir
  
@@ -187,7 +188,8 @@ setup_logstash_agent() {
         rm -f "$INPUT_CONF_FILENAME"
     fi
     echo -e "input {" >> $INPUT_CONF_FILENAME
-    echo -e "   path => '${PIPELINE_LOGGING_FILE}'" >> $INPUT_CONF_FILENAME
+    echo -e "   file {" >> $INPUT_CONF_FILENAME
+    echo -e "       path => '${PIPELINE_LOGGING_FILE}'" >> $INPUT_CONF_FILENAME
     echo -e "       type => 'pipeline_tracking'" >> $INPUT_CONF_FILENAME
     echo -e "   }" >> $INPUT_CONF_FILENAME
     echo -e "}" >> $INPUT_CONF_FILENAME
