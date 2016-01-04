@@ -157,17 +157,17 @@ setup_logstash_agent() {
     local RC=0
 
     # Download the Logstash distribution
-    local cur_dir=`pwd`
-    cd /opt
-    # TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
-    RC=$?
-    if [ $RC -ne 0 ]; then
-        debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
-        cd $cur_dir
-        return 21
-    fi
-    tar xzf logstash-mtlumberjack.tgz
-    cd $cur_dir
+    #local cur_dir=`pwd`
+    #cd /opt
+    ## TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
+    #RC=$?
+    #if [ $RC -ne 0 ]; then
+    #    debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
+    #    cd $cur_dir
+    #    return 21
+        #fi
+    #tar xzf logstash-mtlumberjack.tgz
+    #cd $cur_dir
  
     # Install java jre
     #sudo apt-get install default-jre
@@ -222,7 +222,7 @@ setup_logstash_agent() {
 
     # Run the logstash agent plugin
     debugme echo "Run logstash agent plugin service" 
-    /opt/logstash/bin/logstash agent -f <Your_path_dir>/conf.d 2> /dev/null &
+    /opt/logstash/bin/logstash agent -f "$CONF_D_DIR" 2> /dev/null &
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
