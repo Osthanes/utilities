@@ -161,7 +161,7 @@ setup_logstash_agent() {
     # Download the Logstash distribution
     local cur_dir=`pwd`
     cd /opt
-    ## TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
+    
     wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
@@ -195,7 +195,7 @@ setup_logstash_agent() {
     echo -e "       type => 'pipeline_tracking'" >> $INPUT_CONF_FILENAME
     echo -e "       sincedb_path => '${EXT_DIR}/.sincedb'" >> $INPUT_CONF_FILENAME
     echo -e "       sincedb_write_interval => 1" >> $INPUT_CONF_FILENAME
-    echo -e "       start_position => 'end'" >> $INPUT_CONF_FILENAME
+    echo -e "       start_position => 'beginning'" >> $INPUT_CONF_FILENAME
     echo -e "   }" >> $INPUT_CONF_FILENAME
     echo -e "}" >> $INPUT_CONF_FILENAME
     debugme echo "input configuration file: $(cat $INPUT_CONF_FILENAME)"
@@ -239,9 +239,6 @@ setup_logstash_agent() {
         debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
         return 22
     fi
-    sleep 20
-    #give the agent time to come up
-
 }
 
 # set up for calls to the logging service - takes parameters
@@ -368,7 +365,7 @@ setup_met_logging() {
     if [ -e "$PIPELINE_LOGGING_FILE" ]; then
         rm -f "$PIPELINE_LOGGING_FILE"
     fi
-    echo "" > "$PIPELINE_LOGGING_FILE"
+    touch "$PIPELINE_LOGGING_FILE"
 
     if [ -z "$USE_AGENT" ]; then
         setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
