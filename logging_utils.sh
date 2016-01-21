@@ -138,6 +138,8 @@ setup_logstash_forwarder() {
     echo -e "   }" >> $NETWORK_CONF_FILE
     echo -e "}" >> $NETWORK_CONF_FILE
     debugme echo "logmet network configuation file: $(cat $NETWORK_CONF_FILE)"
+    
+    
     # Run the mt-logstash-forwarder in the foreground
     debugme echo "Run mt-logstash-forwarder service" 
     /opt/mt-logstash-forwarder/bin/mt-logstash-forwarder -config ${EXT_DIR}/conf.d -spool-size 100 -quiet true 2> /dev/null &
@@ -159,7 +161,8 @@ setup_logstash_agent() {
     # Download the Logstash distribution
     local cur_dir=`pwd`
     cd /opt
-    # TBD wget for the new repository address to download  the logstash-mtlumberjack.tgz
+    
+    wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
@@ -187,11 +190,19 @@ setup_logstash_agent() {
         rm -f "$INPUT_CONF_FILENAME"
     fi
     echo -e "input {" >> $INPUT_CONF_FILENAME
-    echo -e "   path => '${PIPELINE_LOGGING_FILE}'" >> $INPUT_CONF_FILENAME
+    echo -e "   file {" >> $INPUT_CONF_FILENAME
+    echo -e "       path => '${PIPELINE_LOGGING_FILE}'" >> $INPUT_CONF_FILENAME
     echo -e "       type => 'pipeline_tracking'" >> $INPUT_CONF_FILENAME
+    echo -e "       sincedb_path => '${EXT_DIR}/.sincedb'" >> $INPUT_CONF_FILENAME
+    echo -e "       sincedb_write_interval => 1" >> $INPUT_CONF_FILENAME
+    echo -e "       start_position => 'beginning'" >> $INPUT_CONF_FILENAME
     echo -e "   }" >> $INPUT_CONF_FILENAME
     echo -e "}" >> $INPUT_CONF_FILENAME
     debugme echo "input configuration file: $(cat $INPUT_CONF_FILENAME)"
+    # clear the sincedb file
+    if [ -e "${EXT_DIR}/.sincedb" ]; then
+        rm -f "${EXT_DIR}/.sincedb"
+    fi
 
     # set filter coniguation file
     if [ -e "$FILTER_CONF_FILE" ]; then
@@ -222,13 +233,12 @@ setup_logstash_agent() {
 
     # Run the logstash agent plugin
     debugme echo "Run logstash agent plugin service" 
-    /opt/logstash/bin/logstash agent -f <Your_path_dir>/conf.d 2> /dev/null &
+    /opt/logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
         return 22
     fi
-
 }
 
 # set up for calls to the logging service - takes parameters
@@ -242,6 +252,7 @@ setup_met_logging() {
     local BMIX_TARGET=""
     local BMIX_TARGET_PREFIX=""
     local APT_TARGET_PREFIX=""
+    local USE_AGENT=""
     local RC=0
 
     if [ -z $1 ]; then
@@ -255,7 +266,13 @@ setup_met_logging() {
         return 2
     else
         BMIX_PWD=$2
-    fi   
+    fi
+    if [ "$USE_LOG_FORWARDER" = "1" ]; then
+        debugme echo "Using logstash forwarder"
+    else
+        debugme echo "Using logstash agent"
+        USE_AGENT="true"
+    fi
     # get bluemix space and org
     if [ -z "$BLUEMIX_SPACE" ] || [ -z "$BLUEMIX_ORG" ]; then 
         ice_retry_save_output info 2>/dev/null
@@ -348,10 +365,13 @@ setup_met_logging() {
     if [ -e "$PIPELINE_LOGGING_FILE" ]; then
         rm -f "$PIPELINE_LOGGING_FILE"
     fi
-    echo "" > "$PIPELINE_LOGGING_FILE"
+    touch "$PIPELINE_LOGGING_FILE"
 
-    setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
-#    setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+    if [ -z "$USE_AGENT" ]; then
+        setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+    else
+        setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
+    fi
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "setup_logstash_forwarder failed with return code ${RC}"
