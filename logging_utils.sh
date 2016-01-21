@@ -193,9 +193,16 @@ setup_logstash_agent() {
     echo -e "   file {" >> $INPUT_CONF_FILENAME
     echo -e "       path => '${PIPELINE_LOGGING_FILE}'" >> $INPUT_CONF_FILENAME
     echo -e "       type => 'pipeline_tracking'" >> $INPUT_CONF_FILENAME
+    echo -e "       sincedb_path => '${EXT_DIR}/.sincedb'" >> $INPUT_CONF_FILENAME
+    echo -e "       sincedb_write_interval => 1" >> $INPUT_CONF_FILENAME
+    echo -e "       start_position => 'end'" >> $INPUT_CONF_FILENAME
     echo -e "   }" >> $INPUT_CONF_FILENAME
     echo -e "}" >> $INPUT_CONF_FILENAME
     debugme echo "input configuration file: $(cat $INPUT_CONF_FILENAME)"
+    # clear the sincedb file
+    if [ -e "${EXT_DIR}/.sincedb" ]; then
+        rm -f "${EXT_DIR}/.sincedb"
+    fi
 
     # set filter coniguation file
     if [ -e "$FILTER_CONF_FILE" ]; then
