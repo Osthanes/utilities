@@ -270,7 +270,7 @@ setup_met_logging() {
     else
         BMIX_PWD=$2
     fi
-    if [ -z $3 ]; then
+    if [ "$USE_LOG_FORWARDER" = "1" ]; then
         debugme echo "Using logstash forwarder"
     else
         debugme echo "Using logstash agent"
