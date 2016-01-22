@@ -23,6 +23,60 @@ debugme() {
 }
 
 ###########################################################
+# Install the IBM Containers plug-in (cf ic)              #
+#                                                         #
+###########################################################
+install_cf_ic() {
+
+    debugme echo "installing docker"
+    sudo apt-get -y install docker.io
+    DOCKER_VER=$(docker -v)
+    log_and_echo "$LABEL" "Successfully installed ${DOCKER_VER}"
+
+    pushd $EXT_DIR
+    debugme echo "wget of ic plugin"
+    wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64
+    chmod 755 $EXT_DIR/ibm-containers-linux_x64
+
+    debugme echo "Installing IBM Containers plugin (cf ic)"
+    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64
+    local RESULT=$?
+    if [ $RESULT -ne 0 ]; then 
+        log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
+        ${EXT_DIR}/print_help.sh
+        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to install IBM Containers plug-in (cf ic). $(get_error_info)"
+        exit $RESULT
+        return 1
+    fi
+    popd
+    debugme echo "Testing cf ic integration"
+    ice_retry_save_output init
+    RESULT=$?
+    if [ $RESULT -ne 0 ]; then 
+        log_and_echo "$ERROR" "'cf ic init' command failed with return code ${RESULT}"
+        ${EXT_DIR}/print_help.sh
+        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to test cf ic integration. $(get_error_info)"
+        exit $RESULT
+        return 2
+    else
+        while read -r line
+        do
+            name=$line
+            echo $line | grep 'export'
+            if [ $? -eq 0 ]; then
+                command ${line}
+            fi
+            echo "Name read from file - $name"
+        done < "iceretry.log"
+    fi
+    log_and_echo "$SUCCESSFUL" "Successfully install and accessed into IBM Containers plug-in (cf ic)"
+    debugme echo "$(ice_retry version)"
+    debugme echo "$(ice_retry info)"
+    return 0
+
+}
+
+###########################################################
 # Login to Container Service                              #
 # Using ice login command  with bluemix api key           #
 ###########################################################
@@ -245,21 +299,27 @@ ice_inspect_images() {
 }
 
 ###########################################################
-# Ice command retry function with not output
+# Ice or (cf ic) command retry function with not output
 # 
 ###########################################################
 ice_retry(){
     local RC=0
     local retries=0
     local iceparms="$*"
-    debugme echo "ice command: ice ${iceparms}"
+    local COMMAND=""
+    if [ "$USE_ICE_CLI" = "1" ]; then
+        COMMAND="ice"
+    else
+        COMMAND="${EXT_DIR}/cf ic"
+    fi
+    debugme echo "Command: ${COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        ice $iceparms
+        $COMMAND $iceparms
         RC=$?
         if [ ${RC} -eq 0 ]; then
             break
         fi
-        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -267,22 +327,28 @@ ice_retry(){
 }
 
 ###########################################################
-# Ice command retry function with save output
+# Ice or (cf ic) command retry function with save output
 # in iceretry.log file
 ###########################################################
 ice_retry_save_output(){
     local RC=0
     local retries=0
     local iceparms="$*"
-    debugme echo "ice command: ice ${iceparms}"
+    local COMMAND=""
+    if [ "$USE_ICE_CLI" = "1" ]; then
+        COMMAND="ice"
+    else
+        COMMAND="${EXT_DIR}/cf ic"
+    fi
+    debugme echo "Command: ${COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        ice $iceparms > iceretry.log
+        $COMMAND $iceparms > iceretry.log
         RC=$?
         if [ ${RC} -eq 0 ]; then
             break
         fi
         debugme cat iceretry.log
-        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -477,7 +543,11 @@ login_to_container_service(){
 # Get Name Space       #
 ########################
 get_name_space() {
-    NAMESPACE=$(ice namespace get)
+    if [ "$USE_ICE_CLI" = "1" ]; then
+        NAMESPACE=$(ice namespace get)
+    else
+        NAMESPACE=$(cf ic namespace get)
+    fi
     RC=$?
     if [ $RC -eq 0 ]; then
         if [ -z $NAMESPACE ]; then
@@ -497,6 +567,8 @@ get_name_space() {
     fi 
     return $RC
 }
+
+export install_cf_ic
 
 export -f ice_login_with_api_key
 export -f ice_login_with_bluemix_user
