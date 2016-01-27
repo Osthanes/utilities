@@ -413,7 +413,7 @@ login_to_container_service(){
         echo -e "${red}}Trying to login with 'ice login' command using Bluemix userid and password and check again 'ice info' command. ${no_color}"
         if [ -n "$API_KEY" ]; then 
             echo -e "${label_color}Logging on with API_KEY${no_color}"
-            ice_retry $ICE_ARGS login --key ${API_KEY} 2> /dev/null
+            ice_login_with_api_key ${API_KEY} 2> /dev/null
             RC=$?
         else
             login_using_bluemix_user_password
@@ -425,11 +425,15 @@ login_to_container_service(){
     # check login result 
     if [ $RC -ne 0 ]; then
         echo -e "${red}Failed to accessed into IBM Container Service${no_color}" | tee -a "$ERROR_LOG_FILE"
-        ${EXT_DIR}/print_help.sh
-        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to IBM Container Service CLI. $(get_error_info)"
+        if [ "$USE_ICE_CLI" = "1" ]; then
+            ${EXT_DIR}/print_help.sh
+            ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to IBM Container Service CLI. $(get_error_info)"
+        fi
     else 
         echo -e "${green}Successfully accessed into IBM Containers Service${no_color}"
-        ice info 2> /dev/null
+        if [ "$USE_ICE_CLI" = "1" ]; then
+            ice info 2> /dev/null
+        fi
     fi 
     return $RC
 } 
