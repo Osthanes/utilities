@@ -49,7 +49,6 @@ install_cf_ic() {
 
     debugme echo "Installing IBM Containers plugin (cf ic)"
     $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64
-    cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
@@ -258,7 +257,8 @@ ice_retry(){
     if [ "$USE_ICE_CLI" = "1" ]; then
         COMMAND="ice"
     else
-        COMMAND="${EXT_DIR}/cf ic"
+   #     COMMAND="${EXT_DIR}/cf ic"
+        COMMAND="cf ic"
     fi
     debugme echo "Command: ${COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
@@ -286,7 +286,8 @@ ice_retry_save_output(){
     if [ "$USE_ICE_CLI" = "1" ]; then
         COMMAND="ice"
     else
-        COMMAND="${EXT_DIR}/cf ic"
+ #       COMMAND="${EXT_DIR}/cf ic"
+        COMMAND="cf ic"
     fi
     debugme echo "Command: ${COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
