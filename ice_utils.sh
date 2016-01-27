@@ -39,12 +39,17 @@ install_cf_ic() {
     log_and_echo "$LABEL" "Successfully installed ${DOCKER_VER}"
 
     pushd $EXT_DIR
+
+    EXT_DIR_CF_VER=$($EXT_DIR/cf -v)
+    log_and_echo "$LABEL" "New cf version: ${EXT_DIR_CF_VER}"
+
     debugme echo "wget of ic plugin"
     wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
     chmod 755 $EXT_DIR/ibm-containers-linux_x64
 
     debugme echo "Installing IBM Containers plugin (cf ic)"
     $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
+    cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
