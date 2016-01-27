@@ -463,7 +463,7 @@ get_name_space() {
     return $RC
 }
 
-export install_cf_ic
+export -f install_cf_ic
 
 export -f ice_login_with_api_key
 export -f ice_login_with_bluemix_user
