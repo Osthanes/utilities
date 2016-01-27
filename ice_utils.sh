@@ -48,8 +48,8 @@ install_cf_ic() {
     chmod 755 $EXT_DIR/ibm-containers-linux_x64
 
     debugme echo "Installing IBM Containers plugin (cf ic)"
-    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
-    cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
+    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64
+    cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
