@@ -29,7 +29,7 @@ debugme() {
 install_cf_ic() {
 
     debugme echo "installing docker"
-    sudo apt-get -y install docker.io
+    sudo apt-get -y install docker.io &> /dev/null
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then
         log_and_echo "$ERROR" "'Installing docker failed with return code ${RESULT}"
@@ -40,11 +40,11 @@ install_cf_ic() {
 
     pushd $EXT_DIR
     debugme echo "wget of ic plugin"
-    wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64
+    wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
     chmod 755 $EXT_DIR/ibm-containers-linux_x64
 
     debugme echo "Installing IBM Containers plugin (cf ic)"
-    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 
+    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
@@ -161,6 +161,49 @@ ice_login_with_bluemix_user() {
         sleep 20
         retries=$(( $retries + 1 ))   
     done
+    return $RC
+}
+
+###########################################################
+# Get Container information
+# Using ice info command
+###########################################################
+ice_info(){
+    local RC=0
+    local retries=0
+    debugme echo "Command: ice info"
+    while [ $retries -lt 5 ]; do
+        ice info 2>/dev/null
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        fi
+        echo -e "${label_color}\"ice info did not return successfully. Sleep 20 sec and try again.${no_color}"
+        sleep 20
+        retries=$(( $retries + 1 ))
+    done
+    return $RC
+}
+
+###########################################################
+# Get list of the container images  
+# Using ice images command           
+###########################################################
+ice_images() {
+    local RC=0
+    local retries=0
+    debugme echo "Command: ice images"
+    while [ $retries -lt 5 ]; do
+        ice images &> /dev/null
+        RC=$?
+        if [ ${RC} -eq 0 ]; then
+            break
+        else
+            echo -e "${label_color}ice images did not return successfully. Sleep 20 sec and try again.${no_color}"
+        fi
+        sleep 20
+        retries=$(( $retries + 1 )) 
+    done  
     return $RC
 }
 
@@ -284,10 +327,10 @@ ice_login_check() {
     debugme cat /home/jenkins/.cf/config.json | cut -c1-2
     debugme cat /home/jenkins/.cf/config.json | cut -c3-
     debugme echo "testing ice login via ice info command"
-    ice_retry info 2>/dev/null
+    ice_info
     RC=$?
     if [ ${RC} -eq 0 ]; then
-        ice_retry images 2>/dev/null
+        ice_images
         RC=$?
     fi
     return $RC
