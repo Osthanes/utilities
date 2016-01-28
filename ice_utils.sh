@@ -41,14 +41,14 @@ install_cf_ic() {
     pushd $EXT_DIR
 
     EXT_DIR_CF_VER=$($EXT_DIR/cf -v)
-    log_and_echo "$LABEL" "New cf version: ${EXT_DIR_CF_VER}"
+    log_and_echo "$LABEL" "New EXT_DIR/cf version: ${EXT_DIR_CF_VER}"
 
     debugme echo "wget of ic plugin"
     wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
     chmod 755 $EXT_DIR/ibm-containers-linux_x64
 
     debugme echo "Installing IBM Containers plugin (cf ic)"
-    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64
+    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
@@ -333,10 +333,10 @@ ice_login_check() {
     debugme cat /home/jenkins/.cf/config.json | cut -c1-2
     debugme cat /home/jenkins/.cf/config.json | cut -c3-
     debugme echo "testing ice login via ice info command"
-    ice_info
+    ice_retry info 2>/dev/null
     RC=$?
     if [ ${RC} -eq 0 ]; then
-        ice_images
+        ice_retry images 2>/dev/null
         RC=$?
     fi
     return $RC
