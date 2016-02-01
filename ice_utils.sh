@@ -254,20 +254,14 @@ ice_retry(){
     local retries=0
     local iceparms="$*"
     local COMMAND=""
-    if [ "$USE_ICE_CLI" = "1" ]; then
-        COMMAND="ice"
-    else
-   #     COMMAND="${EXT_DIR}/cf ic"
-        COMMAND="cf ic"
-    fi
-    debugme echo "Command: ${COMMAND} ${iceparms}"
+    debugme echo "Command: ${IC_COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        $COMMAND $iceparms
+        $IC_COMMAND $iceparms
         RC=$?
         if [ ${RC} -eq 0 ]; then
             break
         fi
-        echo -e "${label_color}\"${COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -282,22 +276,15 @@ ice_retry_save_output(){
     local RC=0
     local retries=0
     local iceparms="$*"
-    local COMMAND=""
-    if [ "$USE_ICE_CLI" = "1" ]; then
-        COMMAND="ice"
-    else
- #       COMMAND="${EXT_DIR}/cf ic"
-        COMMAND="cf ic"
-    fi
-    debugme echo "Command: ${COMMAND} ${iceparms}"
+    debugme echo "Command: ${IC_COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        $COMMAND $iceparms > iceretry.log
+        $IC_COMMAND $iceparms > iceretry.log
         RC=$?
         if [ ${RC} -eq 0 ]; then
             break
         fi
         debugme cat iceretry.log
-        echo -e "${label_color}\"${COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -496,15 +483,11 @@ login_to_container_service(){
 # Get Name Space       #
 ########################
 get_name_space() {
-    if [ "$USE_ICE_CLI" = "1" ]; then
-        NAMESPACE=$(ice namespace get)
-    else
-        NAMESPACE=$(cf ic namespace get)
-    fi
+    NAMESPACE=$($IC_COMMAND namespace get)
     RC=$?
     if [ $RC -eq 0 ]; then
         if [ -z $NAMESPACE ]; then
-            log_and_echo "$ERROR" "Did not discover namespace using ice namespace get, but no error was returned"
+            log_and_echo "$ERROR" "Did not discover namespace using $IC_COMMAND namespace get, but no error was returned"
             printEnablementInfo
             ${EXT_DIR}/print_help.sh
             ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to discover namespace. $(get_error_info)"
@@ -513,7 +496,7 @@ get_name_space() {
             export NAMESPACE=$NAMESPACE
         fi
     else 
-        log_and_echo "$ERROR" "ice namespace get' returned an error"
+        log_and_echo "$ERROR" "$IC_COMMAND namespace get' returned an error"
         printEnablementInfo
         ${EXT_DIR}/print_help.sh    
         ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get namespace. $(get_error_info)"
