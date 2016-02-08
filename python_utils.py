@@ -484,22 +484,25 @@ def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN, 
         return None
 
     result = execute_cf_cmd("cf service-keys '%s'" % service_name)
+    debug("Raw result: \n" + str(result))
     # ignore the header and grab the first service key
-    result = result.splitlines()[2:3:]
+    result = result.splitlines()[3:4:]
     debug("Raw filtered result: \n" + str(result))
     
     if len(result) == 0:
         #create the default service key
         execute_cf_cmd("cf csk '%s' '%s'" % (service_name, key_name))
         result = execute_cf_cmd("cf service-keys '%s'" % service_name)
+        debug("Raw result: \n" + str(result))
         # ignore the header and grab the first service key
         result = result.splitlines()[2:3:]
         debug("Raw filtered result: \n" + str(result))
 
     if len(result) > 0:
         result = execute_cf_cmd("cf service-key '%s' '%s'" % (service_name, result[0].strip()))
+        debug("Raw result: \n" + str(result))
         # extract out only the json portion of the command result
-        result = '\n'.join(result.split('\n')[1:-2])
+        result = '\n'.join(result.split('\n')[1:-1])
         debug("Raw filtered result: \n" + str(result))
 
         result = json.loads(result)
