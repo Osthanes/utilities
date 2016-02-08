@@ -37,6 +37,7 @@ STARS="**********************************************************************"
 
 
 DEFAULT_SERVICE_PLAN="free"
+DEFAULT_SERVICE_KEY="pipeline_service_key"
 DEFAULT_BRIDGEAPP_NAME="pipeline_bridge_app"
 EXT_DIR=os.getenv('EXT_DIR', ".")
 DEBUG=os.environ.get('DEBUG')
@@ -475,7 +476,7 @@ def get_credentials_from_bound_app (service, binding_app=None, plan=DEFAULT_SERV
 
 
 # retrieve the credentials for non-binding service brokers which (optionally) implement the service_keys endpoint
-def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN):
+def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN, key_name=DEFAULT_SERVICE_KEY):
 
     # get or create the service if necessary
     service_name = get_or_create_service(service, plan)
@@ -486,6 +487,14 @@ def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN):
     # ignore the header and grab the first service key
     result = result.splitlines()[2:3:]
     debug("Raw filtered result: \n" + str(result))
+    
+    if len(result) == 0:
+        #create the default service key
+        execute_cf_cmd("cf csk '%s' '%s'" % (service_name, key_name))
+        result = execute_cf_cmd("cf service-keys '%s'" % service_name)
+        # ignore the header and grab the first service key
+        result = result.splitlines()[2:3:]
+        debug("Raw filtered result: \n" + str(result))
 
     if len(result) > 0:
         result = execute_cf_cmd("cf service-key '%s' '%s'" % (service_name, result[0].strip()))
