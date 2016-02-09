@@ -189,10 +189,14 @@ setup_logstash_agent() {
     if [ -e "$INPUT_CONF_FILENAME" ]; then
         rm -f "$INPUT_CONF_FILENAME"
     fi
+    if [ -z "$LOGGER_TYPE" ]; then
+        #setting as local so other code won't think it has been set externally
+        local LOGGER_TYPE="pipeline_tracking"
+    fi
     echo -e "input {" >> $INPUT_CONF_FILENAME
     echo -e "   file {" >> $INPUT_CONF_FILENAME
     echo -e "       path => '${PIPELINE_LOGGING_FILE}'" >> $INPUT_CONF_FILENAME
-    echo -e "       type => 'pipeline_tracking'" >> $INPUT_CONF_FILENAME
+    echo -e "       type => '${LOGGER_TYPE}'" >> $INPUT_CONF_FILENAME
     echo -e "       sincedb_path => '${EXT_DIR}/.sincedb'" >> $INPUT_CONF_FILENAME
     echo -e "       sincedb_write_interval => 1" >> $INPUT_CONF_FILENAME
     echo -e "       start_position => 'beginning'" >> $INPUT_CONF_FILENAME
