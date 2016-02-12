@@ -495,7 +495,7 @@ def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN, 
         result = execute_cf_cmd("cf service-keys '%s'" % service_name)
         debug("Raw result: \n" + str(result))
         # ignore the header and grab the first service key
-        result = result.splitlines()[2:3:]
+        result = result.splitlines()[3:4:]
         debug("Raw filtered result: \n" + str(result))
 
     if len(result) > 0:
