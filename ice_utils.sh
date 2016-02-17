@@ -18,8 +18,79 @@
 # uncomment the next line to debug this script
 #set -x
 
+if [ -z "$IC_COMMAND" ]; then
+    if [ "$USE_ICE_CLI" = "1" ]; then
+        export IC_COMMAND="ice"
+    else
+        export IC_COMMAND="${EXT_DIR}/cf ic"
+    fi
+fi
+
 debugme() {
   [[ $DEBUG = 1 ]] && "$@" || :
+}
+
+###########################################################
+# Install the IBM Containers plug-in (cf ic)              #
+#                                                         #
+###########################################################
+install_cf_ic() {
+
+    debugme echo "installing docker"
+    sudo apt-get -y install docker.io &> /dev/null
+    local RESULT=$?
+    if [ $RESULT -ne 0 ]; then
+        log_and_echo "$ERROR" "'Installing docker failed with return code ${RESULT}"
+        return 1
+    fi
+    DOCKER_VER=$(docker -v)
+    log_and_echo "$LABEL" "Successfully installed ${DOCKER_VER}"
+
+    pushd $EXT_DIR
+
+    EXT_DIR_CF_VER=$($EXT_DIR/cf -v)
+    log_and_echo "$LABEL" "New EXT_DIR/cf version: ${EXT_DIR_CF_VER}"
+
+    debugme echo "wget of ic plugin"
+    wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
+    chmod 755 $EXT_DIR/ibm-containers-linux_x64
+
+    debugme echo "Installing IBM Containers plugin (cf ic)"
+    $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
+    local RESULT=$?
+    if [ $RESULT -ne 0 ]; then 
+        log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
+        ${EXT_DIR}/print_help.sh
+        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to install IBM Containers plug-in (cf ic). $(get_error_info)"
+        exit $RESULT
+        return 1
+    fi
+    popd
+    debugme echo "Testing cf ic integration"
+    ice_retry_save_output init
+    RESULT=$?
+    if [ $RESULT -ne 0 ]; then 
+        log_and_echo "$ERROR" "'cf ic init' command failed with return code ${RESULT}"
+        ${EXT_DIR}/print_help.sh
+        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to test cf ic integration. $(get_error_info)"
+        exit $RESULT
+        return 2
+    else
+        while read -r line
+        do
+            name=$line
+            echo $line | grep 'export'
+            if [ $? -eq 0 ]; then
+                command ${line}
+            fi
+            echo "Name read from file - $name"
+        done < "iceretry.log"
+    fi
+    log_and_echo "$SUCCESSFUL" "Successfully install and accessed into IBM Containers plug-in (cf ic)"
+    debugme echo "$(ice_retry version)"
+    debugme echo "$(ice_retry info)"
+    return 0
+
 }
 
 ###########################################################
@@ -109,22 +180,19 @@ ice_login_with_bluemix_user() {
 # Get Container information
 # Using ice info command
 ###########################################################
-ice_info() {
+ice_info(){
     local RC=0
     local retries=0
+    debugme echo "Command: ice info"
     while [ $retries -lt 5 ]; do
-        debugme echo "ice info command: ice ICE_ARGS info"
-        local ICEINFO=$(ice info 2>/dev/null)
-        echo "$ICEINFO" > iceinfo.log 2> /dev/null
+        ice info 2>/dev/null
         RC=$?
-        debugme echo "$ICEINFO"
         if [ ${RC} -eq 0 ]; then
             break
         fi
-        echo -e "${label_color}ice info did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"ice info did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
-        rm -f iceinfo.log 
     done
     return $RC
 }
@@ -136,8 +204,8 @@ ice_info() {
 ice_images() {
     local RC=0
     local retries=0
+    debugme echo "Command: ice images"
     while [ $retries -lt 5 ]; do
-        debugme echo "ice images command: ice ICE_ARGS images"
         ice images &> /dev/null
         RC=$?
         if [ ${RC} -eq 0 ]; then
@@ -177,89 +245,31 @@ ice_build_image() {
     else
         CHACHE_OPTION="--no-cache"
     fi
-    while [ $retries -lt 5 ]; do
-        BUILD_COMMAND="ice $ICE_ARGS build ${CHACHE_OPTION} ${PULL_OPTION} --tag ${FULL_REPOSITORY_NAME} ${WORKSPACE}"
-        echo "Build command: ${BUILD_COMMAND}"
-        ${BUILD_COMMAND}
-        RC=$?
-        if [ ${RC} -eq 0 ]; then
-            break
-        fi
-        echo -e "${label_color}Failed to build IBM Container image. Sleep 20 sec and try again.${no_color}"
-        sleep 20
-        retries=$(( $retries + 1 ))   
-    done
+
+    BUILD_COMMAND="$ICE_ARGS build ${CHACHE_OPTION} ${PULL_OPTION} --tag ${FULL_REPOSITORY_NAME} ${WORKSPACE}"
+    echo "Build command: ${BUILD_COMMAND}"
+    ice_retry ${BUILD_COMMAND}
+    RC=$?
     return $RC
 }
 
 ###########################################################
-# Rmeove Container image 
-# Using ice rmi command
-###########################################################
-ice_rmi() {
-    local IMAGE_NAME=$1
-    if [ -z "${IMAGE_NAME}" ]; then
-        echo -e "${red}Expected IMAGE_NAME to be passed into ice_rmi ${no_color}"
-        return 1
-    fi
-    local RC=0
-    local retries=0
-    local RESPONSE=""
-    while [ $retries -lt 5 ]; do
-        debugme echo "ice rmi command: ice $ICE_ARGS rmi ${IMAGE_NAME}"
-        RESPONSE=$(ice $ICE_ARGS rmi ${IMAGE_NAME} 2> /dev/null)
-        RC=$?
-        if [ ${RC} -eq 0 ]; then
-            break
-        else
-            echo -e "${label_color}ice rmi did not return successfully. Sleep 20 sec and try again.${no_color}"
-        fi
-        sleep 20
-        retries=$(( $retries + 1 )) 
-    done
-    export RET_RESPONCE=${RESPONSE}
-    return $RC
-}
-
-###########################################################
-# Container inspect images 
-# Using ice inspect images command
-###########################################################
-ice_inspect_images() {
-    local RC=0
-    local retries=0
-    local RESPONSE=""
-    while [ $retries -lt 5 ]; do
-        debugme echo "ice inspect images command: ice $ICE_ARGS inspect images"
-        ice inspect images > inspect.log 2> /dev/null
-        RC=$?
-        if [ ${RC} -eq 0 ]; then
-            break
-        else
-            echo -e "${label_color}ice inspect images did not return successfully. Sleep 20 sec and try again.${no_color}"
-        fi
-        sleep 20
-        retries=$(( $retries + 1 )) 
-    done
-    return $RC
-}
-
-###########################################################
-# Ice command retry function with not output
+# Ice or (cf ic) command retry function with not output
 # 
 ###########################################################
 ice_retry(){
     local RC=0
     local retries=0
     local iceparms="$*"
-    debugme echo "ice command: ice ${iceparms}"
+    local COMMAND=""
+    debugme echo "Command: ${IC_COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        ice $iceparms
+        $IC_COMMAND $iceparms
         RC=$?
         if [ ${RC} -eq 0 ]; then
             break
         fi
-        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -267,22 +277,22 @@ ice_retry(){
 }
 
 ###########################################################
-# Ice command retry function with save output
+# Ice or (cf ic) command retry function with save output
 # in iceretry.log file
 ###########################################################
 ice_retry_save_output(){
     local RC=0
     local retries=0
     local iceparms="$*"
-    debugme echo "ice command: ice ${iceparms}"
+    debugme echo "Command: ${IC_COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        ice $iceparms > iceretry.log
+        $IC_COMMAND $iceparms > iceretry.log
         RC=$?
         if [ ${RC} -eq 0 ]; then
             break
         fi
         debugme cat iceretry.log
-        echo -e "${label_color}\"ice ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -452,7 +462,7 @@ login_to_container_service(){
         echo -e "${red}}Trying to login with 'ice login' command using Bluemix userid and password and check again 'ice info' command. ${no_color}"
         if [ -n "$API_KEY" ]; then 
             echo -e "${label_color}Logging on with API_KEY${no_color}"
-            ice_retry $ICE_ARGS login --key ${API_KEY} 2> /dev/null
+            ice_login_with_api_key ${API_KEY} 2> /dev/null
             RC=$?
         else
             login_using_bluemix_user_password
@@ -464,11 +474,15 @@ login_to_container_service(){
     # check login result 
     if [ $RC -ne 0 ]; then
         echo -e "${red}Failed to accessed into IBM Container Service${no_color}" | tee -a "$ERROR_LOG_FILE"
-        ${EXT_DIR}/print_help.sh
-        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to IBM Container Service CLI. $(get_error_info)"
+        if [ "$USE_ICE_CLI" = "1" ]; then
+            ${EXT_DIR}/print_help.sh
+            ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to IBM Container Service CLI. $(get_error_info)"
+        fi
     else 
         echo -e "${green}Successfully accessed into IBM Containers Service${no_color}"
-        ice info 2> /dev/null
+        if [ "$USE_ICE_CLI" = "1" ]; then
+            ice info 2> /dev/null
+        fi
     fi 
     return $RC
 } 
@@ -477,11 +491,11 @@ login_to_container_service(){
 # Get Name Space       #
 ########################
 get_name_space() {
-    NAMESPACE=$(ice namespace get)
+    NAMESPACE=$($IC_COMMAND namespace get)
     RC=$?
     if [ $RC -eq 0 ]; then
         if [ -z $NAMESPACE ]; then
-            log_and_echo "$ERROR" "Did not discover namespace using ice namespace get, but no error was returned"
+            log_and_echo "$ERROR" "Did not discover namespace using $IC_COMMAND namespace get, but no error was returned"
             printEnablementInfo
             ${EXT_DIR}/print_help.sh
             ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to discover namespace. $(get_error_info)"
@@ -490,7 +504,7 @@ get_name_space() {
             export NAMESPACE=$NAMESPACE
         fi
     else 
-        log_and_echo "$ERROR" "ice namespace get' returned an error"
+        log_and_echo "$ERROR" "$IC_COMMAND namespace get' returned an error"
         printEnablementInfo
         ${EXT_DIR}/print_help.sh    
         ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get namespace. $(get_error_info)"
@@ -498,14 +512,12 @@ get_name_space() {
     return $RC
 }
 
+export -f install_cf_ic
+
 export -f ice_login_with_api_key
 export -f ice_login_with_bluemix_user
 export -f ice_login_check
-export -f ice_info
-export -f ice_images
 export -f ice_build_image
-export -f ice_rmi
-export -f ice_inspect_images
 
 export -f ice_retry
 export -f ice_retry_save_output
