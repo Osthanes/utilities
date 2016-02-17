@@ -18,6 +18,14 @@
 # uncomment the next line to debug this script
 #set -x
 
+if [ -z "$IC_COMMAND" ]; then
+    if [ "$USE_ICE_CLI" = "1" ]; then
+        export IC_COMMAND="ice"
+    else
+        export IC_COMMAND="${EXT_DIR}/cf ic"
+    fi
+fi
+
 debugme() {
   [[ $DEBUG = 1 ]] && "$@" || :
 }
