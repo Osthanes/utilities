@@ -332,33 +332,52 @@ setup_met_logging() {
     local curl_data="user=${BMIX_USER}&passwd=${BMIX_PWD}&space=${BMIX_SPACE}&organization=${BMIX_ORG}"
     curl -k --silent -d "$curl_data" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
     RC=$?
+    local RC_ERROR=$(grep -i "error" logmet.setup.info)
+    debugme echo $RC_ERROR 
     local local_val=""
     if [ $RC == 0 ]; then
-        while read -r line || [[ -n $line ]]; do 
-            debugme echo "logmet access info: $(cat logmet.setup.info)"
-            if [[ $line == *"\"access_token\":"* ]]; then
-                local_val=$(get_trimmed_value "${line#*:}")
-                if [ "${local_val}x" != "x" ]; then
-                    export LOG_ACCESS_TOKEN=$local_val
+        if [ -z "${RC_ERROR}" ]; then
+            while read -r line || [[ -n $line ]]; do 
+                if [[ $line == *"\"access_token\":"* ]]; then
+                    local_val=$(get_trimmed_value "${line#*:}")
+                    if [ "${local_val}x" != "x" ]; then
+                        export LOG_ACCESS_TOKEN=$local_val
+                    fi
+                elif [[ $line == *"\"logging_token\":"* ]]; then
+                    local_val=$(get_trimmed_value "${line#*:}")
+                    if [ "${local_val}x" != "x" ]; then
+                        export LOG_LOGGING_TOKEN=$local_val
+                    fi
+                elif [[ $line == *"\"space_id\":"* ]]; then
+                    local_val=$(get_trimmed_value "${line#*:}")
+                    if [ "${local_val}x" != "x" ]; then
+                        export LOG_SPACE_ID=$local_val
+                    fi
                 fi
-            elif [[ $line == *"\"logging_token\":"* ]]; then
-                local_val=$(get_trimmed_value "${line#*:}")
-                if [ "${local_val}x" != "x" ]; then
-                    export LOG_LOGGING_TOKEN=$local_val
-                fi
-            elif [[ $line == *"\"space_id\":"* ]]; then
-                local_val=$(get_trimmed_value "${line#*:}")
-                if [ "${local_val}x" != "x" ]; then
-                    export LOG_SPACE_ID=$local_val
-                fi
-            fi
-        done <logmet.setup.info
+            done <logmet.setup.info
+        else
+            # curl response with error
+            debugme echo "Log init failed: the curl command for login service retuns error:"
+            debugme echo "curl -k --silent -d \"$curl_data\" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login"
+            debugme echo $RC_ERROR
+            return 8
+        fi
         rm logmet.setup.info
     else
         rm logmet.setup.info
         # unable to curl our tokens, fail out
         debugme echo "Log init failed, could not get tokens, rc = $RC"
         return 6
+    fi
+
+    # Check for the space_id and logging_token
+    if [ -z "${LOG_SPACE_ID}" ]; then
+        debugme echo "Log init failed, could not get space_id"
+        return 9
+    fi
+    if [ -z "${LOG_LOGGING_TOKEN}" ]; then
+        debugme echo "Log init failed, could not get logging_token"
+        return 10
     fi
 
     # setup the logfile to track
@@ -376,6 +395,7 @@ setup_met_logging() {
         debugme echo "setup_logstash_forwarder ${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
         setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
     else
+        debugme echo "setup_logstash_agent ${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
         setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
     fi
     RC=$?
