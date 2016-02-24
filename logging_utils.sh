@@ -335,6 +335,7 @@ setup_met_logging() {
     local local_val=""
     if [ $RC == 0 ]; then
         while read -r line || [[ -n $line ]]; do 
+            debugme echo "logmet access info: $(cat logmet.setup.info)"
             if [[ $line == *"\"access_token\":"* ]]; then
                 local_val=$(get_trimmed_value "${line#*:}")
                 if [ "${local_val}x" != "x" ]; then
@@ -372,6 +373,7 @@ setup_met_logging() {
     touch "$PIPELINE_LOGGING_FILE"
 
     if [ -z "$USE_AGENT" ]; then
+        debugme echo "setup_logstash_forwarder ${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
         setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
     else
         setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
