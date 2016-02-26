@@ -159,10 +159,11 @@ setup_logstash_agent() {
     local RC=0
 
     # Download the Logstash distribution
-    local cur_dir=`pwd`
-    cd /opt
+    #local cur_dir=`pwd`
+    #cd /opt
     
-    wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz &> /dev/null
+    #wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz &> /dev/null
+    wget https://downloads.opvis.bluemix.net:5443/src/logstash-mtlumberjack.tgz &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
@@ -170,7 +171,7 @@ setup_logstash_agent() {
         return 21
     fi
     tar xzf logstash-mtlumberjack.tgz
-    cd $cur_dir
+    #cd $cur_dir
  
     # Install java jre
     #sudo apt-get install default-jre
@@ -237,7 +238,8 @@ setup_logstash_agent() {
 
     # Run the logstash agent plugin
     debugme echo "Run logstash agent plugin service" 
-    /opt/logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
+    logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
+    #/opt/logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
@@ -256,6 +258,7 @@ setup_met_logging() {
     local BMIX_TARGET=""
     local BMIX_TARGET_PREFIX=""
     local APT_TARGET_PREFIX=""
+    local RESOLVE_TARGET_PREFIX=""
     local USE_AGENT=""
     local RC=0
 
@@ -310,6 +313,7 @@ setup_met_logging() {
     if [ "${BMIX_TARGET}x" == "stagingx" ]; then
         BMIX_TARGET_PREFIX="logs.stage1.opvis.bluemix.net:9091"
         APT_TARGET_PREFIX="logmet.stage1"
+        RESOLVE_TARGET_PREFIX="--resolve logmet.stage1.ng.bluemix.net:443:169.54.242.188"
     else
         BMIX_TARGET_PREFIX="logs.opvis.bluemix.net:9091"
         APT_TARGET_PREFIX="logmet"
@@ -330,7 +334,7 @@ setup_met_logging() {
     # get our necessary logging keys
     debugme echo "Fetching logging keys for user: $BMIX_USER space: $BMIX_SPACE org: $BMIX_ORG target_api: $APT_TARGET_PREFIX"
     local curl_data="user=${BMIX_USER}&passwd=${BMIX_PWD}&space=${BMIX_SPACE}&organization=${BMIX_ORG}"
-    curl -k --silent -d "$curl_data" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
+    curl -k --silent -d "$curl_data" $RESOLVE_TARGET_PREFIX https://${APT_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
     RC=$?
     local RC_ERROR=$(grep -i "error" logmet.setup.info)
     debugme echo $RC_ERROR 
