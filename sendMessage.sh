@@ -415,7 +415,7 @@ if [ "$sendMsg" == false ]; then
     fi
 else
     if [ -z "$SLACK_WEBHOOK_PATH" ] && [ -z "$HIP_CHAT_TOKEN" ]; then
-        die ${RC_NO_TOKEN_DEFINED}
+        msgid_${RC_NO_TOKEN_DEFINED}
     else
         # Slack Notification
         if [ -n "$SLACK_WEBHOOK_PATH" ]; then
