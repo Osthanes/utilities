@@ -364,6 +364,7 @@ setup_met_logging() {
             debugme echo "Log init failed: the curl command for login service retuns error:"
             debugme echo "curl -k --silent -d \"$curl_data\" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login"
             debugme echo $RC_ERROR
+            rm logmet.setup.info
             return 8
         fi
         rm logmet.setup.info
