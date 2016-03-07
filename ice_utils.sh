@@ -18,11 +18,6 @@
 # uncomment the next line to debug this script
 #set -x
 
-#Default to ICE CLI to prevent breaking of certain pipeline configurations
-if [ -z "$USE_ICE_CLI" ]; then
-    export USE_ICE_CLI=1
-fi
-
 if [ -z "$IC_COMMAND" ]; then
     if [ "$USE_ICE_CLI" = "1" ]; then
         export IC_COMMAND="ice"

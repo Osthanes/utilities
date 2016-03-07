@@ -274,11 +274,11 @@ setup_met_logging() {
     else
         BMIX_PWD=$2
     fi
-    if [ "$USE_LOG_AGENT" = "1" ]; then
+    if [ "$USE_LOG_FORWARDER" = "1" ]; then
+        debugme echo "Using logstash forwarder"
+    else
         debugme echo "Using logstash agent"
         USE_AGENT="true"
-    else
-        debugme echo "Using logstash forwarder"
     fi
     # get bluemix space and org
     if [ -z "$BLUEMIX_SPACE" ] || [ -z "$BLUEMIX_ORG" ]; then 
