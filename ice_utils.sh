@@ -86,7 +86,7 @@ install_cf_ic() {
             echo "Name read from file - $name"
         done < "iceretry.log"
     fi
-    log_and_echo "$SUCCESSFUL" "Successfully install and accessed into IBM Containers plug-in (cf ic)"
+    log_and_echo "$SUCCESSFUL" "Successfully installed and accessed into IBM Containers plug-in (cf ic)"
     debugme echo "$(ice_retry version)"
     debugme echo "$(ice_retry info)"
     return 0
