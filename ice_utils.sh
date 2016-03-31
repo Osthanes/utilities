@@ -51,8 +51,13 @@ install_cf_ic() {
     EXT_DIR_CF_VER=$($EXT_DIR/cf -v)
     log_and_echo "$LABEL" "New EXT_DIR/cf version: ${EXT_DIR_CF_VER}"
 
-    debugme echo "wget of ic plugin"
-    wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
+    if [ -f cfic826.tgz ]; then
+        debugme echo "untgz ic plugin"
+        tar zxvf cfic826.tgz
+    else
+        debugme echo "wget of ic plugin"
+        wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
+    fi
     chmod 755 $EXT_DIR/ibm-containers-linux_x64
 
     debugme echo "Installing IBM Containers plugin (cf ic)"
