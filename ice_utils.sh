@@ -274,7 +274,7 @@ ice_retry(){
         if [ ${RC} -eq 0 ]; then
             break
         fi
-        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. RC=${RC}. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -297,7 +297,7 @@ ice_retry_save_output(){
             break
         fi
         debugme cat iceretry.log
-        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. RC=${RC}. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
