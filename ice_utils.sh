@@ -18,11 +18,6 @@
 # uncomment the next line to debug this script
 #set -x
 
-#Default to ICE CLI to prevent breaking of certain pipeline configurations
-if [ -z "$USE_ICE_CLI" ]; then
-    export USE_ICE_CLI=1
-fi
-
 if [ -z "$IC_COMMAND" ]; then
     if [ "$USE_ICE_CLI" = "1" ]; then
         export IC_COMMAND="ice"
@@ -56,8 +51,13 @@ install_cf_ic() {
     EXT_DIR_CF_VER=$($EXT_DIR/cf -v)
     log_and_echo "$LABEL" "New EXT_DIR/cf version: ${EXT_DIR_CF_VER}"
 
-    debugme echo "wget of ic plugin"
-    wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
+    if [ -f $EXT_DIR/utilities/cfic826.tgz ]; then
+        debugme echo "untgz ic plugin"
+        tar zxf $EXT_DIR/utilities/cfic826.tgz
+    else
+        debugme echo "wget of ic plugin"
+        wget https://static-ice.ng.bluemix.net/ibm-containers-linux_x64 &> /dev/null
+    fi
     chmod 755 $EXT_DIR/ibm-containers-linux_x64
 
     debugme echo "Installing IBM Containers plugin (cf ic)"
@@ -91,7 +91,7 @@ install_cf_ic() {
             echo "Name read from file - $name"
         done < "iceretry.log"
     fi
-    log_and_echo "$SUCCESSFUL" "Successfully install and accessed into IBM Containers plug-in (cf ic)"
+    log_and_echo "$SUCCESSFUL" "Successfully installed and accessed into IBM Containers plug-in (cf ic)"
     debugme echo "$(ice_retry version)"
     debugme echo "$(ice_retry info)"
     return 0
@@ -274,7 +274,7 @@ ice_retry(){
         if [ ${RC} -eq 0 ]; then
             break
         fi
-        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. RC=${RC}. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done
@@ -297,7 +297,7 @@ ice_retry_save_output(){
             break
         fi
         debugme cat iceretry.log
-        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. Sleep 20 sec and try again.${no_color}"
+        echo -e "${label_color}\"${IC_COMMAND} ${iceparms}\" did not return successfully. RC=${RC}. Sleep 20 sec and try again.${no_color}"
         sleep 20
         retries=$(( $retries + 1 ))
     done

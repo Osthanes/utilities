@@ -159,10 +159,11 @@ setup_logstash_agent() {
     local RC=0
 
     # Download the Logstash distribution
-    local cur_dir=`pwd`
-    cd /opt
+    #local cur_dir=`pwd`
+    #cd /opt
     
-    wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz &> /dev/null
+    #wget ftp://public.dhe.ibm.com/cloud/bluemix/containers/logstash-mtlumberjack.tgz &> /dev/null
+    wget https://downloads.opvis.bluemix.net:5443/src/logstash-mtlumberjack.tgz &> /dev/null
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not download the logstash plugin agent, rc = $RC"
@@ -170,7 +171,7 @@ setup_logstash_agent() {
         return 21
     fi
     tar xzf logstash-mtlumberjack.tgz
-    cd $cur_dir
+    #cd $cur_dir
  
     # Install java jre
     #sudo apt-get install default-jre
@@ -237,7 +238,8 @@ setup_logstash_agent() {
 
     # Run the logstash agent plugin
     debugme echo "Run logstash agent plugin service" 
-    /opt/logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
+    logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
+    #/opt/logstash/bin/logstash agent -f "$CONF_D_DIR" < /dev/null &> /dev/null &
     RC=$?
     if [ $RC -ne 0 ]; then
         debugme echo "Log init failed, could not start logstash agent plugin service, rc = $RC"
@@ -256,6 +258,7 @@ setup_met_logging() {
     local BMIX_TARGET=""
     local BMIX_TARGET_PREFIX=""
     local APT_TARGET_PREFIX=""
+    local RESOLVE_TARGET_PREFIX=""
     local USE_AGENT=""
     local RC=0
 
@@ -271,11 +274,11 @@ setup_met_logging() {
     else
         BMIX_PWD=$2
     fi
-    if [ "$USE_LOG_AGENT" = "1" ]; then
+    if [ "$USE_LOG_FORWARDER" = "1" ]; then
+        debugme echo "Using logstash forwarder"
+    else
         debugme echo "Using logstash agent"
         USE_AGENT="true"
-    else
-        debugme echo "Using logstash forwarder"
     fi
     # get bluemix space and org
     if [ -z "$BLUEMIX_SPACE" ] || [ -z "$BLUEMIX_ORG" ]; then 
@@ -310,6 +313,7 @@ setup_met_logging() {
     if [ "${BMIX_TARGET}x" == "stagingx" ]; then
         BMIX_TARGET_PREFIX="logs.stage1.opvis.bluemix.net:9091"
         APT_TARGET_PREFIX="logmet.stage1"
+        RESOLVE_TARGET_PREFIX="--resolve logmet.stage1.ng.bluemix.net:443:169.54.242.188"
     else
         BMIX_TARGET_PREFIX="logs.opvis.bluemix.net:9091"
         APT_TARGET_PREFIX="logmet"
@@ -330,34 +334,55 @@ setup_met_logging() {
     # get our necessary logging keys
     debugme echo "Fetching logging keys for user: $BMIX_USER space: $BMIX_SPACE org: $BMIX_ORG target_api: $APT_TARGET_PREFIX"
     local curl_data="user=${BMIX_USER}&passwd=${BMIX_PWD}&space=${BMIX_SPACE}&organization=${BMIX_ORG}"
-    curl -k --silent -d "$curl_data" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
+    curl -k --silent -d "$curl_data" $RESOLVE_TARGET_PREFIX https://${APT_TARGET_PREFIX}.ng.bluemix.net/login > logmet.setup.info
     RC=$?
+    local RC_ERROR=$(grep -i "error" logmet.setup.info)
+    debugme echo $RC_ERROR 
     local local_val=""
     if [ $RC == 0 ]; then
-        while read -r line || [[ -n $line ]]; do 
-            if [[ $line == *"\"access_token\":"* ]]; then
-                local_val=$(get_trimmed_value "${line#*:}")
-                if [ "${local_val}x" != "x" ]; then
-                    export LOG_ACCESS_TOKEN=$local_val
+        if [ -z "${RC_ERROR}" ]; then
+            while read -r line || [[ -n $line ]]; do 
+                if [[ $line == *"\"access_token\":"* ]]; then
+                    local_val=$(get_trimmed_value "${line#*:}")
+                    if [ "${local_val}x" != "x" ]; then
+                        export LOG_ACCESS_TOKEN=$local_val
+                    fi
+                elif [[ $line == *"\"logging_token\":"* ]]; then
+                    local_val=$(get_trimmed_value "${line#*:}")
+                    if [ "${local_val}x" != "x" ]; then
+                        export LOG_LOGGING_TOKEN=$local_val
+                    fi
+                elif [[ $line == *"\"space_id\":"* ]]; then
+                    local_val=$(get_trimmed_value "${line#*:}")
+                    if [ "${local_val}x" != "x" ]; then
+                        export LOG_SPACE_ID=$local_val
+                    fi
                 fi
-            elif [[ $line == *"\"logging_token\":"* ]]; then
-                local_val=$(get_trimmed_value "${line#*:}")
-                if [ "${local_val}x" != "x" ]; then
-                    export LOG_LOGGING_TOKEN=$local_val
-                fi
-            elif [[ $line == *"\"space_id\":"* ]]; then
-                local_val=$(get_trimmed_value "${line#*:}")
-                if [ "${local_val}x" != "x" ]; then
-                    export LOG_SPACE_ID=$local_val
-                fi
-            fi
-        done <logmet.setup.info
+            done <logmet.setup.info
+        else
+            # curl response with error
+            debugme echo "Log init failed: the curl command for login service retuns error:"
+            debugme echo "curl -k --silent -d \"$curl_data\" https://${APT_TARGET_PREFIX}.ng.bluemix.net/login"
+            debugme echo $RC_ERROR
+            rm logmet.setup.info
+            return 8
+        fi
         rm logmet.setup.info
     else
         rm logmet.setup.info
         # unable to curl our tokens, fail out
         debugme echo "Log init failed, could not get tokens, rc = $RC"
         return 6
+    fi
+
+    # Check for the space_id and logging_token
+    if [ -z "${LOG_SPACE_ID}" ]; then
+        debugme echo "Log init failed, could not get space_id"
+        return 9
+    fi
+    if [ -z "${LOG_LOGGING_TOKEN}" ]; then
+        debugme echo "Log init failed, could not get logging_token"
+        return 10
     fi
 
     # setup the logfile to track
@@ -372,8 +397,10 @@ setup_met_logging() {
     touch "$PIPELINE_LOGGING_FILE"
 
     if [ -z "$USE_AGENT" ]; then
+        debugme echo "setup_logstash_forwarder ${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
         setup_logstash_forwarder "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
     else
+        debugme echo "setup_logstash_agent ${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
         setup_logstash_agent "${LOG_SPACE_ID}" "${LOG_LOGGING_TOKEN}" "${BMIX_ORG}" "${BMIX_USER}" "${BMIX_TARGET_PREFIX}"
     fi
     RC=$?
