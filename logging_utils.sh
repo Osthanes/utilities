@@ -466,6 +466,8 @@ log_and_echo() {
         local MSG_LEVEL=$INFO_LEVEL
     fi
     local L_MSG=`echo -e "$*"`
+    local timestamp=`date +"%F %T %Z"`
+    L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
     local D_MSG=`echo -e "${pre}${L_MSG}${post}"`
     if [ $LOGGER_LEVEL -ge $MSG_LEVEL ]; then
         echo "$D_MSG"
@@ -477,8 +479,6 @@ log_and_echo() {
     # always log
     if [ -n "$PIPELINE_LOGGING_FILE" ]; then
         if [ -e $PIPELINE_LOGGING_FILE ]; then
-            local timestamp=`date +"%F %T %Z"`
-            L_MSG=`echo $L_MSG | sed "s/\"/'/g"`
             echo "{\"@timestamp\": \"${timestamp}\", \"loglevel\": \"${MSG_LEVEL}\", \"module\": \"${LOGGER_MODULE}\", \"phase\": \"${LOGGER_PHASE}\", \"message\": \"$L_MSG\"}" >> "$PIPELINE_LOGGING_FILE"
         else
             # no logger file, send to syslog
