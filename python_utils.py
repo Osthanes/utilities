@@ -382,11 +382,13 @@ def bind_app_to_service (app, service, plan=DEFAULT_SERVICE_PLAN):
     if serviceName is None:
         return None
         
+    #Doing a bind-service on an already bound service results in return code 0 and a no-op.
+    #  it is quicker to do it this way than to check if the service is already bound
     LOGGER.info("Binding service \"" + serviceName + "\" to app \"" + app + "\"")
     proc = Popen(["cf bind-service \"" + app + "\" \"" + serviceName + "\""], 
                  shell=True, stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate();
-
+    #We do not restart the app, but we can still access the VCAP variables using cf calls.
     if proc.returncode != 0:
         LOGGER.info("Unable to bind service to the app, error was: " + out)
         return None
