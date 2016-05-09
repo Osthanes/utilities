@@ -43,7 +43,7 @@ EXT_DIR=os.getenv('EXT_DIR', ".")
 DEBUG=os.environ.get('DEBUG')
 if DEBUG:
     if str(DEBUG) == "1" or str(DEBUG).lower() == "true":
-        DEBUG = 1
+        DEBUG = "1"
     else:
         DEBUG = None
 
