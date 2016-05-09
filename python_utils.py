@@ -41,6 +41,11 @@ DEFAULT_SERVICE_KEY="pipeline_service_key"
 DEFAULT_BRIDGEAPP_NAME="pipeline_bridge_app"
 EXT_DIR=os.getenv('EXT_DIR', ".")
 DEBUG=os.environ.get('DEBUG')
+if DEBUG:
+    if str(DEBUG) == "1" or str(DEBUG).lower() == "true":
+        DEBUG = 1
+    else:
+        DEBUG = None
 
 
 SCRIPT_START_TIME = timeit.default_timer()
@@ -131,7 +136,7 @@ def find_api_servers ():
     # get ice server as well by adjusting cf server
     ice_api_server = cf_api_server
     ice_api_server = ice_api_server.replace ( 'api.', 'containers-api.')
-    if DEBUG=="1":
+    if DEBUG:
         if LOGGER:
             LOGGER.debug("cf_api_server set to " + str(cf_api_server))
             LOGGER.debug("ice_api_server set to " + str(ice_api_server))
