@@ -64,7 +64,7 @@ install_cf_ic() {
     $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then 
-        log_and_echo "$ERROR" "'Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
+        log_and_echo "$ERROR" "Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
         ${EXT_DIR}/print_help.sh
         ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to install IBM Containers plug-in (cf ic). $(get_error_info)"
         exit $RESULT
@@ -76,6 +76,7 @@ install_cf_ic() {
     RESULT=$?
     if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "'cf ic init' command failed with return code ${RESULT}"
+        log_and_echo "$ERROR" "Additional message was \"$(cat iceretry.log)\""
         ${EXT_DIR}/print_help.sh
         ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to test cf ic integration. $(get_error_info)"
         exit $RESULT
