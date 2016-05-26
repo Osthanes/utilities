@@ -41,6 +41,11 @@ DEFAULT_SERVICE_KEY="pipeline_service_key"
 DEFAULT_BRIDGEAPP_NAME="pipeline_bridge_app"
 EXT_DIR=os.getenv('EXT_DIR', ".")
 DEBUG=os.environ.get('DEBUG')
+if DEBUG:
+    if str(DEBUG) == "1" or str(DEBUG).lower() == "true":
+        DEBUG = "1"
+    else:
+        DEBUG = None
 
 
 SCRIPT_START_TIME = timeit.default_timer()
@@ -131,7 +136,7 @@ def find_api_servers ():
     # get ice server as well by adjusting cf server
     ice_api_server = cf_api_server
     ice_api_server = ice_api_server.replace ( 'api.', 'containers-api.')
-    if DEBUG=="1":
+    if DEBUG:
         if LOGGER:
             LOGGER.debug("cf_api_server set to " + str(cf_api_server))
             LOGGER.debug("ice_api_server set to " + str(ice_api_server))
@@ -373,6 +378,26 @@ def create_bound_app_for_service (service, plan=DEFAULT_SERVICE_PLAN):
 
     return DEFAULT_BRIDGEAPP_NAME
 
+# get or create the service and bind it to app
+# Returns app when bound to service, None if there is an error
+def bind_app_to_service (app, service, plan=DEFAULT_SERVICE_PLAN):
+    # get or create the service if necessary
+    serviceName = get_or_create_service(service, plan)
+
+    if serviceName is None:
+        return None
+        
+    #Doing a bind-service on an already bound service results in return code 0 and a no-op.
+    #  it is quicker to do it this way than to check if the service is already bound
+    LOGGER.info("Binding service \"" + serviceName + "\" to app \"" + app + "\"")
+    proc = Popen(["cf bind-service \"" + app + "\" \"" + serviceName + "\""], 
+                 shell=True, stdout=PIPE, stderr=PIPE)
+    out, err = proc.communicate();
+    #We do not restart the app, but we can still access the VCAP variables using cf calls.
+    if proc.returncode != 0:
+        LOGGER.info("Unable to bind service to the app, error was: " + out)
+        return None
+    return app
 
 # return the service name for the service, if the service doesn't exist, create it.
 def get_or_create_service(service, plan=DEFAULT_SERVICE_PLAN):
@@ -403,18 +428,25 @@ def get_credentials_from_bound_app (service, binding_app=None, plan=DEFAULT_SERV
     # if no binding app parm passed, go looking to find a bound app for this one
     if binding_app == None:
         binding_app = find_bound_app_for_service(service)
-    # if still no binding app, and the user agreed, CREATE IT!
-    if binding_app == None:
+        # if still no binding app, and the user agreed, CREATE IT!
+        if binding_app == None:
+            setupSpace = os.environ.get('SETUP_SERVICE_SPACE')
+            if (setupSpace != None) and (setupSpace.lower() == "true"):
+                binding_app = create_bound_app_for_service(service=service, plan=plan)
+            else:
+                raise Exception("Service \"" + service + "\" is not loaded and bound in this space.  " + LABEL_COLOR + "Please add the service to the space and bind it to an app, or set the parameter to allow the space to be setup automatically" + LABEL_NO_COLOR)
+    else:
         setupSpace = os.environ.get('SETUP_SERVICE_SPACE')
         if (setupSpace != None) and (setupSpace.lower() == "true"):
-            binding_app = create_bound_app_for_service(service=service, plan=plan)
-        else:
-            raise Exception("Service \"" + service + "\" is not loaded and bound in this space.  " + LABEL_COLOR + "Please add the service to the space and bind it to an app, or set the parameter to allow the space to be setup automatically" + LABEL_NO_COLOR)
+            #Make sure provided binding_app is bound to the service
+            binding_app = bind_app_to_service(app=binding_app, service=service, plan=plan)
+
 
     # if STILL no binding app, we're out of options, just fail out
     if binding_app == None:
         raise Exception("Unable to access an app bound to the " + service + " service - this must be set to get the proper credentials.")
 
+        
     # try to read the env vars off the bound app in cloud foundry, the one we
     # care about is "VCAP_SERVICES"
     verProc = Popen(["cf env \"" + binding_app + "\""], shell=True, 
@@ -477,9 +509,12 @@ def get_credentials_from_bound_app (service, binding_app=None, plan=DEFAULT_SERV
 
 # retrieve the credentials for non-binding service brokers which (optionally) implement the service_keys endpoint
 def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN, key_name=DEFAULT_SERVICE_KEY):
-
-    # get or create the service if necessary
-    service_name = get_or_create_service(service, plan)
+    # get or create the service if allowed
+    setupSpace = os.environ.get('SETUP_SERVICE_SPACE')
+    if (setupSpace != None) and (setupSpace.lower() == "true"):
+        service_name = get_or_create_service(service, plan)
+    else:
+        service_name = find_service_name_in_space(service)
     if service_name is None:
         return None
 
