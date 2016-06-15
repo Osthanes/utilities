@@ -40,9 +40,15 @@ install_cf_ic() {
     sudo apt-get -y install docker.io &> $EXT_DIR/dockerinst.out
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then
-        log_and_echo "$ERROR" "'Installing docker failed with return code ${RESULT}"
+        log_and_echo "$ERROR" "'Installing docker.io failed with return code ${RESULT}"
         debugme cat $EXT_DIR/dockerinst.out
-        return 1
+        sudo apt-get -y install docker.engine &> $EXT_DIR/dockerinst.out
+        RESULT=$?
+        if [ $RESULT -ne 0 ]; then
+            log_and_echo "$ERROR" "'Installing docker.engine failed with return code ${RESULT}"
+            debugme cat $EXT_DIR/dockerinst.out
+            return 1
+        fi
     fi
     DOCKER_VER=$(docker -v)
     log_and_echo "$LABEL" "Successfully installed ${DOCKER_VER}"
