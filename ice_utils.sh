@@ -37,10 +37,11 @@ debugme() {
 install_cf_ic() {
 
     debugme echo "installing docker"
-    sudo apt-get -y install docker.io &> /dev/null
+    sudo apt-get -y install docker.io &> $EXT_DIR/dockerinst.out
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then
         log_and_echo "$ERROR" "'Installing docker failed with return code ${RESULT}"
+        debugme cat $EXT_DIR/dockerinst.out
         return 1
     fi
     DOCKER_VER=$(docker -v)
