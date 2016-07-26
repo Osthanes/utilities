@@ -516,6 +516,7 @@ def get_credentials_for_non_binding_service(service, plan=DEFAULT_SERVICE_PLAN, 
     else:
         service_name = find_service_name_in_space(service)
     if service_name is None:
+        LOGGER.error("No instance of service \"%s\" setup in space" %(service))
         return None
 
     result = execute_cf_cmd("cf service-keys '%s'" % service_name)
