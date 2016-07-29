@@ -1,0 +1,5 @@
+^You are using version .* of the IBM Containers plug-in.
+^Version .* of the plug-in is available for you to install.
+^Run the "cf ic update" command to update your plug-in to the current version.
+^You can review the documentation to see the changes that are included in the new version.
+^https://www.ng.bluemix.net/docs/containers/container_cli_reference_cfic_versions.html

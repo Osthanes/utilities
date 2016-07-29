@@ -266,10 +266,12 @@ ice_build_image() {
     return $RC
 }
 
-###########################################################
-# Ice or (cf ic) command retry function with not output
+#############################################################
+# Ice or (cf ic) command retry function with output to stdout
 # 
-###########################################################
+#       Hides messages about out of date version
+# Pipeline limitations reqiure using an out of date version
+#############################################################
 ice_retry(){
     local RC=0
     local retries=0
@@ -277,8 +279,8 @@ ice_retry(){
     local COMMAND=""
     debugme echo "Command: ${IC_COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        $IC_COMMAND $iceparms
-        RC=$?
+        $IC_COMMAND $iceparms | grep -v -f ${EXT_DIR}/utilities/rmVersionMsg.txt
+        RC=${PIPESTATUS[0]}
         if [ ${RC} -eq 0 ]; then
             break
         fi
@@ -292,6 +294,9 @@ ice_retry(){
 ###########################################################
 # Ice or (cf ic) command retry function with save output
 # in iceretry.log file
+#
+#       Hides messages about out of date version
+# Pipeline limitations reqiure using an out of date version
 ###########################################################
 ice_retry_save_output(){
     local RC=0
@@ -299,8 +304,8 @@ ice_retry_save_output(){
     local iceparms="$*"
     debugme echo "Command: ${IC_COMMAND} ${iceparms}"
     while [ $retries -lt 5 ]; do
-        $IC_COMMAND $iceparms > iceretry.log
-        RC=$?
+        $IC_COMMAND $iceparms | grep -v -f ${EXT_DIR}/utilities/rmVersionMsg.txt > iceretry.log
+        RC=${PIPESTATUS[0]}
         if [ ${RC} -eq 0 ]; then
             break
         fi
