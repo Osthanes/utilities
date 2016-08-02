@@ -103,7 +103,10 @@ def load_cf_auth_info ():
         bearer_token = config_info["AccessToken"]
         if bearer_token.lower().startswith("bearer "):
             bearer_token=bearer_token[7:]
-        space_guid = config_info["SpaceFields"]["Guid"]
+        if "Guid" in config_info["SpaceFields"]:
+            space_guid = config_info["SpaceFields"]["Guid"]
+        elif "GUID" in config_info["SpaceFields"]:
+            space_guid = config_info["SpaceFields"]["GUID"]
 
     return bearer_token, space_guid
 
