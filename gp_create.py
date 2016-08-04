@@ -22,15 +22,87 @@ import os
 import os.path
 import python_utils
 import sys
+import argparse
+import requests
 
 
 python_utils.LOGGER = python_utils.setup_logging()
 
+def valid_size(string):
+    sizes = [ 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384 ]
+    value = int(string)
+    if value in sizes:
+        return value
+    msg = "%r is not a valid memory size, valid sizes are: %r" % (string, sizes)
+    raise argparse.ArgumentTypeError(msg)
+    
+def build_data(args):
+    numberInstances = { "Min", "Max", "Desired" }
+    onlyIncludeIfTrue = { "PublishAllPorts" }
+    output = { "WorkingDir":"" , "CpuShares":1024 }
+    
+    for arg in args:
+        if arg in numberInstances:
+            if not "NumberInstances" in output:
+                output["NumberInstances"] = { }
+            output["NumberInstances"][arg]=args[arg]
+        elif arg in onlyIncludeIfTrue:
+            if args[arg]:
+                output[arg]=True
+        elif args[arg] is not None:
+            if arg is "Memory":
+                output["NumberCpus"] = args[arg]/64
+            output[arg]=args[arg]
+    return output
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--name", metavar="GROUP_NAME", required=True, dest="Name")
+parser.add_argument("-m", "--memory", metavar="MEMORY_SIZE", type=valid_size, default=256, dest="Memory")
+parser.add_argument("-n", "--hostname", metavar="HOSTNAME")
+parser.add_argument("-d", "--domain", metavar="DOMAIN")
+parser.add_argument("-e", "--env", metavar="ENVIRONMENT_VARIABLE", action="append", dest="Env")
+parser.add_argument("--env-file", metavar="ENVIRONMENT_VARIABLES_FILE", type=argparse.FileType('r'))
+port_group = parser.add_mutually_exclusive_group()
+port_group.add_argument("-p", "--publish", metavar="PORT")
+port_group.add_argument("-P", action="store_true", dest="PublishAllPorts")
+parser.add_argument("-v", "--volume", metavar="VOLUME_NAME", action="append")
+parser.add_argument("--min", metavar="MIN_INSTANCE_COUNT", type=int, default=1, dest="Min")
+parser.add_argument("--max", metavar="MAX_INSTANCE_COUNT", type=int, default=2, dest="Max")
+parser.add_argument("--desired", metavar="DESIRED_INSTANCE_COUNT", type=int, default=2, dest="Desired")
+parser.add_argument("--auto", action="store_true", dest="Autorecovery")
+parser.add_argument("--anti", action="store_true", dest="AntiAffinity")
+parser.add_argument("Image", metavar="IMAGE_NAME")
+parser.add_argument("CMD", metavar="COMMAND", nargs="*")
+
+args = vars(parser.parse_args())
+
+print args
 BEARER_TOKEN, SPACE_GUID = python_utils.load_cf_auth_info()
 CF_API_SERVER, CCS_API_SERVER = python_utils.find_api_servers()
 
+print SPACE_GUID
+
 python_utils.LOGGER.info("Starting python create group")
+
 python_utils.LOGGER.debug("Servers cf: %s, ccs: %s" %(CF_API_SERVER, CCS_API_SERVER))
 
-sizes = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384 }
+data = build_data(args)
+
+print "%s"%(data)
+url = CCS_API_SERVER+":8443/v3/containers/groups"
+headers = { 
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "X-Auth-Token": BEARER_TOKEN,
+    "X-Auth-Project-Id": SPACE_GUID
+}
+
+response = requests.post(url, json=data, headers=headers)
+
+print response.status_code
+print response.text
+
+
+
+
 
