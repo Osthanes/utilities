@@ -46,17 +46,17 @@ def build_data(args):
         if arg in numberInstances:
             if not "NumberInstances" in output:
                 output["NumberInstances"] = { }
-            output["NumberInstances"][arg]=str(args[arg])
-        elif arg in route:
-            if not "Route" in output:
-                output["Route"] = { }
-            output["Route"][arg]=str(args[arg])
+            output["NumberInstances"][arg]=args[arg]
         elif arg in onlyIncludeIfTrue:
             if args[arg]:
                 output[arg]="true"
         elif args[arg] is not None:
             if arg is "Memory":
                 output["NumberCpus"] = args[arg]/64
+            if arg in route:
+                if not "Route" in output:
+                    output["Route"] = { }
+                output["Route"][arg]=str(args[arg])
             if type(args[arg]) is bool:
                 if args[arg]:
                     output[arg]="true"
@@ -64,6 +64,25 @@ def build_data(args):
                     output[arg]="false"
             else:
                 output[arg]=args[arg]
+    #perform NumberInstances calculations, default Min=1, Max=2, Desired=2
+    if output["NumberInstances"]["Desired"]:
+        if not output["NumberInstances"]["Min"]:
+            output["NumberInstances"]["Min"]=1
+        if not output["NumberInstances"]["Max"]:
+            output["NumberInstances"]["Max"]=output["NumberInstances"]["Desired"] #By behavior of cf ic
+    elif output["NumberInstances"]["Min"]: #min defined, desired not defined
+        if not output["NumberInstances"]["Max"]:
+            output["NumberInstances"]["Max"] = max(2, output["NumberInstances"]["Min"])
+        output["NumberInstances"]["Desired"] = max(2, output["NumberInstances"]["Min"])
+    elif output["NumberInstances"]["Max"]: #only max is defined
+        output["NumberInstances"]["Min"]=1
+        output["NumberInstances"]["Desired"]=min(2, output["NumberInstances"]["Max"])
+    else:
+        output["NumberInstances"]["Max"]=2
+        output["NumberInstances"]["Min"]=1
+        output["NumberInstances"]["Desired"]=2
+    for arg in output["NumberInstances"]:
+        output["NumberInstances"][arg]=str(output["NumberInstances"][arg])
     return output
 
 parser = argparse.ArgumentParser()
@@ -77,9 +96,9 @@ port_group = parser.add_mutually_exclusive_group()
 port_group.add_argument("-p", "--publish", metavar="PORT", type=int, dest="Port")
 port_group.add_argument("-P", action="store_true", dest="PublishAllPorts")
 parser.add_argument("-v", "--volume", metavar="VOLUME_NAME", dest="Volumes", action="append")
-parser.add_argument("--min", metavar="MIN_INSTANCE_COUNT", type=int, default=1, dest="Min")
-parser.add_argument("--max", metavar="MAX_INSTANCE_COUNT", type=int, default=2, dest="Max")
-parser.add_argument("--desired", metavar="DESIRED_INSTANCE_COUNT", type=int, default=2, dest="Desired")
+parser.add_argument("--min", metavar="MIN_INSTANCE_COUNT", type=int, dest="Min")
+parser.add_argument("--max", metavar="MAX_INSTANCE_COUNT", type=int, dest="Max")
+parser.add_argument("--desired", metavar="DESIRED_INSTANCE_COUNT", type=int, dest="Desired")
 parser.add_argument("--auto", action="store_true", dest="Autorecovery")
 parser.add_argument("--anti", action="store_true", dest="AntiAffinity")
 parser.add_argument("Image", metavar="IMAGE_NAME")
