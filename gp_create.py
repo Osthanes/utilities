@@ -124,7 +124,7 @@ headers = {
     "X-Auth-Project-Id": SPACE_GUID
 }
 
-response = requests.post(url, json=data, headers=headers)
+response = requests.post(url, data=json.dumps(data), headers=headers)
 
 if response.status_code > 400:
     python_utils.LOGGER.error("Received %i status code from api server" %(response.status_code))
