@@ -42,7 +42,6 @@ install_cf_ic() {
     sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
     sudo add-apt-repository "deb https://apt.dockerproject.org/repo ubuntu-precise main"
     sudo apt-get update
-    sudo apt-cache policy docker-engine
     sudo apt-get -y install docker-engine &> $EXT_DIR/dockerinst.out
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then
