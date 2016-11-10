@@ -75,7 +75,7 @@ install_cf_ic() {
     debugme echo "Installing IBM Containers plugin (cf ic)"
     $EXT_DIR/cf install-plugin -f $EXT_DIR/ibm-containers-linux_x64 &> /dev/null
     local RESULT=$?
-    if [ $RESULT -ne 0 ]; then
+    if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "Installing IBM Containers plug-in (cf ic) failed with return code ${RESULT}"
         ${EXT_DIR}/print_help.sh
         ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to install IBM Containers plug-in (cf ic). $(get_error_info)"
@@ -86,7 +86,7 @@ install_cf_ic() {
     debugme echo "Testing cf ic integration"
     ice_retry_save_output init
     RESULT=$?
-    if [ $RESULT -ne 0 ]; then
+    if [ $RESULT -ne 0 ]; then 
         log_and_echo "$ERROR" "'cf ic init' command failed with return code ${RESULT}"
         log_and_echo "$ERROR" "Additional message was \"$(cat iceretry.log)\""
         ${EXT_DIR}/print_help.sh
@@ -125,7 +125,7 @@ ice_login_with_api_key() {
     local retries=0
     while [ $retries -lt 5 ]; do
         debugme echo "login command: ice $ICE_ARGS login --key ${API_KEY}"
-        #ice $ICE_ARGS login --key ${API_KEY} --host ${CCS_API_HOST} --registry ${CCS_REGISTRY_HOST} --api ${BLUEMIX_API_HOST}
+        #ice $ICE_ARGS login --key ${API_KEY} --host ${CCS_API_HOST} --registry ${CCS_REGISTRY_HOST} --api ${BLUEMIX_API_HOST} 
         ice $ICE_ARGS login --key ${API_KEY} 2> /dev/null
         RC=$?
         if [ ${RC} -eq 0 ]; then
@@ -133,7 +133,7 @@ ice_login_with_api_key() {
         fi
         echo -e "${label_color}Failed to login to IBM Container Service. Sleep 20 sec and try again.${no_color}"
         sleep 20
-        retries=$(( $retries + 1 ))
+        retries=$(( $retries + 1 ))   
     done
     return $RC
 }
@@ -162,25 +162,25 @@ ice_login_with_bluemix_user() {
         echo -e "${red}Expected BLUEMIX_API_HOST to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
     fi
-    if [ -z "${BLUEMIX_USER}" ]; then
+    if [ -z "${BLUEMIX_USER}" ]; then 
         echo -e "${red}Expected BLUEMIX_USER to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
-    fi
-    if [ -z "${BLUEMIX_PASSWORD}" ]; then
+    fi 
+    if [ -z "${BLUEMIX_PASSWORD}" ]; then 
         echo -e "${red}Expected BLUEMIX_PASSWORD to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
-    fi
-    if [ -z "${BLUEMIX_ORG}" ]; then
+    fi 
+    if [ -z "${BLUEMIX_ORG}" ]; then 
         echo -e "${red}Expected BLUEMIX_ORG to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
-    fi
+    fi 
     if [ -z "${BLUEMIX_SPACE}" ]; then
         echo -e "${red}Expected BLUEMIX_SPACE to be passed into ice_login_with_bluemix_user ${no_color}"
         return 1
-    fi
+    fi 
     local RC=0
     local retries=0
-    while [ $retries -lt 5 ]; do
+    while [ $retries -lt 5 ]; do 
         debugme echo "login command: ice $ICE_ARGS login --cf --host ${CCS_API_HOST} --registry ${CCS_REGISTRY_HOST} --api ${BLUEMIX_API_HOST} --user ${BLUEMIX_USER} --psswd ${BLUEMIX_PASSWORD} --org ${BLUEMIX_ORG} --space ${BLUEMIX_SPACE}"
         ice $ICE_ARGS login --cf --host ${CCS_API_HOST} --registry ${CCS_REGISTRY_HOST} --api ${BLUEMIX_API_HOST} --user ${BLUEMIX_USER} --psswd ${BLUEMIX_PASSWORD} --org ${BLUEMIX_ORG} --space ${BLUEMIX_SPACE} 2> /dev/null
         RC=$?
@@ -189,7 +189,7 @@ ice_login_with_bluemix_user() {
         fi
         echo -e "${label_color}Failed to login to IBM Container Service. Sleep 20 sec and try again.${no_color}"
         sleep 20
-        retries=$(( $retries + 1 ))
+        retries=$(( $retries + 1 ))   
     done
     return $RC
 }
@@ -216,8 +216,8 @@ ice_info(){
 }
 
 ###########################################################
-# Get list of the container images
-# Using ice images command
+# Get list of the container images  
+# Using ice images command           
 ###########################################################
 ice_images() {
     local RC=0
@@ -232,13 +232,13 @@ ice_images() {
             echo -e "${label_color}ice images did not return successfully. Sleep 20 sec and try again.${no_color}"
         fi
         sleep 20
-        retries=$(( $retries + 1 ))
-    done
+        retries=$(( $retries + 1 )) 
+    done  
     return $RC
 }
 
 ###########################################################
-# build the Container image
+# build the Container image             
 # Using ice build command
 ###########################################################
 ice_build_image() {
@@ -273,7 +273,7 @@ ice_build_image() {
 
 #############################################################
 # Ice or (cf ic) command retry function with output to stdout
-#
+# 
 #       Hides messages about out of date version
 # Pipeline limitations reqiure using an out of date version
 #############################################################
@@ -329,7 +329,7 @@ printEnablementInfo() {
     echo -e "${label_color}No namespace has been defined for this user ${no_color}"
     echo -e "Please check the following: "
     echo -e "   - Login to Bluemix ( https://console.ng.bluemix.net )"
-    echo -e "   - Select the 'IBM Containers' icon from the Dashboard"
+    echo -e "   - Select the 'IBM Containers' icon from the Dashboard" 
     echo -e "   - Select 'Create a Container'"
     echo -e "Or using the ICE command line: "
     echo -e "   - ice login -a api.ng.bluemix.net -H containers-api.ng.bluemix.net -R registry.ng.bluemix.net"
@@ -373,7 +373,7 @@ get_targeting_info() {
             export BLUEMIX_ACCESS_TOKEN=$local_val
         fi
     else
-        debugme echo "failed to get BLUEMIX_ACCESS_TOKEN"
+        debugme echo "failed to get BLUEMIX_ACCESS_TOKEN" 
     fi
     # get UAA_END_POINT_URL
     local_val="http://uaa$(echo $BLUEMIX_API_HOST | sed 's/[^\.]*//')"
@@ -382,7 +382,7 @@ get_targeting_info() {
             export UAA_END_POINT_URL=$local_val
         fi
     else
-        debugme echo "failed to get UAA_END_POINT_URL"
+        debugme echo "failed to get UAA_END_POINT_URL" 
     fi
     #get BLUEMIX_ORG
     local_val=$(echo $CONFIG_JSON_DATA | awk -F'"OrganizationFields":' '{print $2;}' | awk -F'"' '{print $4;}')
@@ -391,7 +391,7 @@ get_targeting_info() {
             export BLUEMIX_ORG=$local_val
         fi
     else
-        debugme echo "failed to get BLUEMIX_ORG"
+        debugme echo "failed to get BLUEMIX_ORG" 
     fi
     #get BLUEMIX_SPACE
     local_val=$(echo $CONFIG_JSON_DATA | awk -F'"SpaceFields":' '{print $2;}' | awk -F'"' '{print $4;}')
@@ -400,7 +400,7 @@ get_targeting_info() {
             export BLUEMIX_SPACE=$local_val
         fi
     else
-        debugme echo "failed to get BLUEMIX_SPACE"
+        debugme echo "failed to get BLUEMIX_SPACE" 
     fi
     # get BLUEMIX_USER
     if [ -z "$BLUEMIX_USER" ]; then
@@ -412,9 +412,9 @@ get_targeting_info() {
                 debugme echo "failed to get BLUEMIX_USER"
             fi
         else
-            debugme echo "failed to get BLUEMIX_USER. invalid token or url"
-            debugme echo "Token: ${BLUEMIX_ACCESS_TOKEN}"
-            debugme echo "URL: ${UAA_END_POINT_URL}/userinfo"
+            debugme echo "failed to get BLUEMIX_USER. invalid token or url"   
+            debugme echo "Token: ${BLUEMIX_ACCESS_TOKEN}" 
+            debugme echo "URL: ${UAA_END_POINT_URL}/userinfo"       
         fi
     fi
     return 0
@@ -424,24 +424,24 @@ get_targeting_info() {
 # login_using_bluemix_user_password      #
 ##########################################
 login_using_bluemix_user_password(){
-    if [ -z "$BLUEMIX_USER" ]; then
+    if [ -z "$BLUEMIX_USER" ]; then 
         echo -e "${red} In order to login with ice login command, the Bluemix user id is required ${no_color}" | tee -a "$ERROR_LOG_FILE"
         echo -e "${red} Please set BLUEMIX_USER on environment ${no_color}" | tee -a "$ERROR_LOG_FILE"
         return 1
-    fi
-    if [ -z "$BLUEMIX_PASSWORD" ]; then
+    fi 
+    if [ -z "$BLUEMIX_PASSWORD" ]; then 
         echo -e "${red} In order to login with ice login command, the Bluemix password is required ${no_color}" | tee -a "$ERROR_LOG_FILE"
         echo -e "${red} Please set BLUEMIX_PASSWORD as an environment property environment ${no_color}" | tee -a "$ERROR_LOG_FILE"
         return 1
-    fi
-    if [ -z "$BLUEMIX_ORG" ]; then
+    fi 
+    if [ -z "$BLUEMIX_ORG" ]; then 
         export BLUEMIX_ORG=$BLUEMIX_USER
         echo -e "${label_color} Using ${BLUEMIX_ORG} for Bluemix organization, please set BLUEMIX_ORG on the environment if you wish to change this. ${no_color} "
-    fi
+    fi 
     if [ -z "$BLUEMIX_SPACE" ]; then
         export BLUEMIX_SPACE="dev"
         echo -e "${label_color} Using ${BLUEMIX_SPACE} for Bluemix space, please set BLUEMIX_SPACE on the environment if you wish to change this. ${no_color} "
-    fi
+    fi 
     echo -e "${label_color}Logging on with Bluemix userid and Bluemix password${no_color}"
     echo "BLUEMIX_USER: ${BLUEMIX_USER}"
     echo "BLUEMIX_SPACE: ${BLUEMIX_SPACE}"
@@ -466,7 +466,7 @@ login_using_bluemix_user_password(){
         fi
     else
         echo -e "${red}Failed to log in into IBM Container Service${no_color}. ice login command returns error code ${RC}" | tee -a "$ERROR_LOG_FILE"
-    fi
+    fi 
 }
 ################################
 # Login to Container Service   #
@@ -476,14 +476,14 @@ login_to_container_service(){
     if [ -f ~/.cf/config.json ]; then
         get_targeting_info
     fi
-    # Check if we are already logged in via ice command
+    # Check if we are already logged in via ice command 
     ice_login_check
     local RC=$?
-    # check login result
+    # check login result 
     if [ $RC -ne 0 ]; then
         echo -e "${red}}Failed to access to IBM Container Service using credentials passed from IBM DevOps Services. 'ice info' command failed with return code ${RC}. ${no_color}"
         echo -e "${red}}Trying to login with 'ice login' command using Bluemix userid and password and check again 'ice info' command. ${no_color}"
-        if [ -n "$API_KEY" ]; then
+        if [ -n "$API_KEY" ]; then 
             echo -e "${label_color}Logging on with API_KEY${no_color}"
             ice_login_with_api_key ${API_KEY} 2> /dev/null
             RC=$?
@@ -494,21 +494,21 @@ login_to_container_service(){
     else
         echo -e "${label_color}Successfully accessed into IBM Container Service using credentials passed from IBM DevOps Services ${no_color}"
     fi
-    # check login result
+    # check login result 
     if [ $RC -ne 0 ]; then
         echo -e "${red}Failed to accessed into IBM Container Service${no_color}" | tee -a "$ERROR_LOG_FILE"
         if [ "$USE_ICE_CLI" = "1" ]; then
             ${EXT_DIR}/print_help.sh
             ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to IBM Container Service CLI. $(get_error_info)"
         fi
-    else
+    else 
         echo -e "${green}Successfully accessed into IBM Containers Service${no_color}"
         if [ "$USE_ICE_CLI" = "1" ]; then
             ice info 2> /dev/null
         fi
-    fi
+    fi 
     return $RC
-}
+} 
 
 ########################
 # Get Name Space       #
@@ -526,12 +526,12 @@ get_name_space() {
         else
             export NAMESPACE=$NAMESPACE
         fi
-    else
+    else 
         log_and_echo "$ERROR" "$IC_COMMAND namespace get' returned an error"
         printEnablementInfo
-        ${EXT_DIR}/print_help.sh
+        ${EXT_DIR}/print_help.sh    
         ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to get namespace. $(get_error_info)"
-    fi
+    fi 
     return $RC
 }
 
