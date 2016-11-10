@@ -38,10 +38,10 @@ def valid_size(string):
     
 def parse_bool(string):
     truth = { "True", "TRUE", "true", "1" }
-    lies = { "False", "FALSE", "false", "0" }
+    untruth = { "False", "FALSE", "false", "0" }
     if string in truth:
         return True
-    elif string in lies:
+    elif string in untruth:
         return False
     else:
         msg = "%r is not a valid boolean" % string
@@ -113,7 +113,7 @@ parser.add_argument("--desired", metavar="DESIRED_INSTANCE_COUNT", type=int, des
 parser.add_argument("--auto", action="store_true", dest="Autorecovery")
 parser.add_argument("--anti", action="store_true", dest="AntiAffinity")
 parser.add_argument("--session_affinity", action="store_true", dest="SessionAffinity")
-parser.add_argument("--http_monitor_enabled", metavar="HTTP_MONITOR_ENABLED", type=parse_bool, default="true", dest="HTTP_MONITOR")
+parser.add_argument("--http_monitor_enabled", metavar="HTTP_MONITOR_ENABLED", nargs='?', const="true", type=parse_bool, dest="HTTP_MONITOR")
 parser.add_argument("--http_monitor_path", metavar="HTTP_MONITOR_PATH", default="", dest="HTTP_MONITOR_PATH")
 parser.add_argument("--http_monitor_rc_list", metavar="HTTP_MONITOR_RC_LIST", default="", dest="HTTP_MONITOR_RC_LIST")
 parser.add_argument("Image", metavar="IMAGE_NAME")
