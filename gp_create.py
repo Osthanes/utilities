@@ -51,7 +51,7 @@ def build_data(args):
     numberInstances = { "Min", "Max", "Desired" }
     route = {"domain", "host"}
     onlyIncludeIfTrue = { "PublishAllPorts" }
-    output = { "WorkingDir":"" , "CpuShares":1024 }
+    output = { "WorkingDir":"" }
     
     for arg in args:
         if arg in numberInstances:
@@ -62,8 +62,6 @@ def build_data(args):
             if args[arg]:
                 output[arg]="true"
         elif args[arg] is not None:
-            if arg is "Memory":
-                output["NumberCpus"] = args[arg]/64
             if arg in route:
                 if not "Route" in output:
                     output["Route"] = { }
@@ -116,6 +114,7 @@ parser.add_argument("--session_affinity", action="store_true", dest="SessionAffi
 parser.add_argument("--http_monitor_enabled", metavar="HTTP_MONITOR_ENABLED", nargs='?', const="true", type=parse_bool, dest="HTTP_MONITOR")
 parser.add_argument("--http_monitor_path", metavar="HTTP_MONITOR_PATH", default="", dest="HTTP_MONITOR_PATH")
 parser.add_argument("--http_monitor_rc_list", metavar="HTTP_MONITOR_RC_LIST", default="", dest="HTTP_MONITOR_RC_LIST")
+parser.add_argument("--ip", metavar="IP_ADDRESS", dest="FloatingIpAddress")
 parser.add_argument("Image", metavar="IMAGE_NAME")
 parser.add_argument("Cmd", metavar="COMMAND", nargs="*")
 
