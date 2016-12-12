@@ -111,7 +111,7 @@ parser.add_argument("--desired", metavar="DESIRED_INSTANCE_COUNT", type=int, des
 parser.add_argument("--auto", action="store_true", dest="Autorecovery")
 parser.add_argument("--anti", action="store_true", dest="AntiAffinity")
 parser.add_argument("--session_affinity", action="store_true", dest="SessionAffinity")
-parser.add_argument("--http_monitor_enabled", metavar="HTTP_MONITOR_ENABLED", nargs='?', const="true", type=parse_bool, dest="HTTP_MONITOR")
+parser.add_argument("--http_monitor_enabled", metavar="HTTP_MONITOR_ENABLED", nargs='?', const="true", default="true", type=parse_bool, dest="HTTP_MONITOR")
 parser.add_argument("--http_monitor_path", metavar="HTTP_MONITOR_PATH", default="", dest="HTTP_MONITOR_PATH")
 parser.add_argument("--http_monitor_rc_list", metavar="HTTP_MONITOR_RC_LIST", default="", dest="HTTP_MONITOR_RC_LIST")
 parser.add_argument("--ip", metavar="IP_ADDRESS", dest="FloatingIpAddress")
