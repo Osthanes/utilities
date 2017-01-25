@@ -37,7 +37,11 @@ debugme() {
 install_cf_ic() {
 
     debugme echo "installing docker"
-    sudo apt-get -y install docker.io &> $EXT_DIR/dockerinst.out
+    sudo apt-get -y install apt-transport-https ca-certificates &> $EXT_DIR/dockerinst.out
+    sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D &>> $EXT_DIR/dockerinst.out
+    sudo add-apt-repository "deb https://apt.dockerproject.org/repo ubuntu-precise main" &>> $EXT_DIR/dockerinst.out
+    sudo apt-get update &>> $EXT_DIR/dockerinst.out
+    sudo apt-get -y install docker-engine &>> $EXT_DIR/dockerinst.out
     local RESULT=$?
     if [ $RESULT -ne 0 ]; then
         log_and_echo "$ERROR" "'Installing docker.io failed with return code ${RESULT}"
