@@ -39,7 +39,7 @@ install_cf_ic() {
     debugme echo "installing docker"
     sudo apt-get -y install apt-transport-https ca-certificates &> $EXT_DIR/dockerinst.out
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D &>> $EXT_DIR/dockerinst.out
-    echo "deb https://apt.dockerproject.org/repo ubuntu-precise main" > /etc/apt/sources.list.d/docker.list
+    sudo echo "deb https://apt.dockerproject.org/repo ubuntu-precise main" > /etc/apt/sources.list.d/docker.list
     sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/docker.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" &>> $EXT_DIR/dockerinst.out
     sudo apt-get -y install docker-engine &>> $EXT_DIR/dockerinst.out
     local RESULT=$?
