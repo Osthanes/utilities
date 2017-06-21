@@ -83,26 +83,37 @@ install_cf_ic() {
     fi
     popd
     debugme echo "Testing cf ic integration"
-    ice_retry_save_output init
+    if [ "$USE_ICE_CLI" = "1" ]; then
+        ice_retry_save_output init
+    else
+        ice_retry_save_output login
+    fi
     RESULT=$?
     if [ $RESULT -ne 0 ]; then 
-        log_and_echo "$ERROR" "'cf ic init' command failed with return code ${RESULT}"
+        log_and_echo "$ERROR" "'cf ic login' command failed with return code ${RESULT}"
         log_and_echo "$ERROR" "Additional message was \"$(cat iceretry.log)\""
-        ${EXT_DIR}/print_help.sh
-        ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to test cf ic integration. $(get_error_info)"
-        exit $RESULT
-        return 2
-    else
-        while read -r line
-        do
-            name=$line
-            echo $line | grep 'export'
-            if [ $? -eq 0 ]; then
-                command ${line}
-            fi
-            echo "Name read from file - $name"
-        done < "iceretry.log"
+        log_and_echo "$INFO" "Trying one additional 'cf ic init' call"
+        ${IC_COMMAND} init | grep -v -f ${EXT_DIR}/utilities/rmVersionMsg.txt > iceretry.log
+        RESULT=${PIPESTATUS[0]}
+        if [ $RESULT -ne 0 ]; then
+            log_and_echo "$ERROR" "'cf ic init' command failed with return code ${RESULT}"
+            log_and_echo "$ERROR" "Additional message was \"$(cat iceretry.log)\""
+            ${EXT_DIR}/print_help.sh
+            ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to test cf ic integration. $(get_error_info)"
+            exit $RESULT
+            return 2
+        fi
     fi
+    #Fall-through if $RESULT is 0 from either the login or the final init attempt
+    while read -r line
+    do
+        echo $line | grep 'export'
+        if [ $? -eq 0 ]; then
+            command ${line}
+        fi
+        echo " - $line"
+    done < "iceretry.log"
+    
     log_and_echo "$SUCCESSFUL" "Successfully installed and accessed into IBM Containers plug-in (cf ic)"
     debugme echo "$(ice_retry version)"
     debugme echo "$(ice_retry info)"
