@@ -82,10 +82,11 @@ install_cf_ic() {
         return 1
     fi
     popd
-    debugme echo "Testing cf ic integration"
     if [ "$USE_ICE_CLI" = "1" ]; then
+        debugme echo "ice init"
         ice_retry_save_output init
     else
+        debugme echo "cf ic login"
         ice_retry_save_output login
     fi
     RESULT=$?
@@ -99,7 +100,7 @@ install_cf_ic() {
             log_and_echo "$ERROR" "'cf ic init' command failed with return code ${RESULT}"
             log_and_echo "$ERROR" "Additional message was \"$(cat iceretry.log)\""
             ${EXT_DIR}/print_help.sh
-            ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to test cf ic integration. $(get_error_info)"
+            ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Failed to login to the IBM Container Service. $(get_error_info)"
             exit $RESULT
             return 2
         fi
